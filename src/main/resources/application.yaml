@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: boost-backend
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/boost}
+    username: ${SPRING_DATASOURCE_USERNAME:boost}
+    password: ${SPRING_DATASOURCE_PASSWORD:boost}
+    driver-class-name: org.postgresql.Driver
+
+  # https://docs.spring.io/spring-ai/reference/api/vectordbs/pgvector.html
+  ai:
+    vectorstore:
+      type: ${SPRING_AI_VECTORSTORE_TYPE:none}
+      pgvector:
+        index-type: ${SPRING_AI_VECTORSTORE_PGVECTOR_INDEX_TYPE:hnsw}
+        distance-metric: ${SPRING_AI_VECTORSTORE_PGVECTOR_DISTANCE_METRIC:cosine}
+        dimension: ${SPRING_AI_VECTORSTORE_PGVECTOR_DIMENSION:1536}
+        max-documnets: ${SPRING_AI_VECTORSTORE_PGVECTOR_MAX_DOCUMENTS:10000}
+        initialize-schema: ${SPRING_AI_VECTORSTORE_PGVECTOR_INITIALIZE_SCHEMA:true}
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
