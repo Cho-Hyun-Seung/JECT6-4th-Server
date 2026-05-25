@@ -17,25 +17,5 @@ services:
       timeout: 5s
       retries: 10
 
-  spring:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: boost-spring
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-boost}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-boost}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-boost}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
-      # Set SPRING_AI_VECTORSTORE_TYPE=pgvector after configuring an EmbeddingModel bean.
-      SPRING_AI_VECTORSTORE_TYPE: ${SPRING_AI_VECTORSTORE_TYPE:-none}
-      # Keep true to let Spring AI create the pgvector vector_store table when enabled.
-      SPRING_AI_VECTORSTORE_PGVECTOR_INITIALIZE_SCHEMA: ${SPRING_AI_VECTORSTORE_PGVECTOR_INITIALIZE_SCHEMA:-true}
-    ports:
-      - "${SPRING_PORT:-8080}:8080"
-
 volumes:
   postgres-data:
