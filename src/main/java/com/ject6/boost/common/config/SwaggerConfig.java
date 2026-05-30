@@ -1,4 +1,4 @@
-package com.ject6.boost.config;
+package com.ject6.boost.common.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;

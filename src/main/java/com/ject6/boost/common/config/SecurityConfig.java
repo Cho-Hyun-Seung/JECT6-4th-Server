@@ -1,4 +1,4 @@
-package com.ject6.boost.config;
+package com.ject6.boost.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
