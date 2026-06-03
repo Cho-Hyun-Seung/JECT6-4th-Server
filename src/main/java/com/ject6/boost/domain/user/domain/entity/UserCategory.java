@@ -1,7 +1,10 @@
 package com.ject6.boost.domain.user.domain.entity;
 
+import com.ject6.boost.domain.user.domain.constant.CategoryType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
@@ -27,9 +30,9 @@ public class UserCategory {
     private User user;
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category_type", nullable = false, length = 50)
+    private CategoryType categoryType;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -39,12 +42,12 @@ public class UserCategory {
     private OffsetDateTime deletedAt;
 
     /**
-     * 사용자와 관심 카테고리의 선택 관계를 생성하는 함수.
+     * 사용자와 관심 카테고리 선택 관계를 생성하는 함수.
      */
-    public static UserCategory create(User user, Category category) {
+    public static UserCategory create(User user, CategoryType categoryType) {
         UserCategory userCategory = new UserCategory();
         userCategory.user = user;
-        userCategory.category = category;
+        userCategory.categoryType = categoryType;
         return userCategory;
     }
 }

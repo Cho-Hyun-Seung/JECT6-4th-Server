@@ -1,10 +1,10 @@
 package com.ject6.boost.domain.user.infrastructure.impl;
 
-import com.ject6.boost.domain.user.domain.entity.Category;
+import com.ject6.boost.domain.user.domain.constant.CategoryType;
 import com.ject6.boost.domain.user.domain.entity.User;
 import com.ject6.boost.domain.user.domain.entity.UserCategory;
-import com.ject6.boost.domain.user.infrastructure.repository.UserCategoryJpaRepository;
 import com.ject6.boost.domain.user.domain.repository.UserCategoryRepository;
+import com.ject6.boost.domain.user.infrastructure.repository.UserCategoryJpaRepository;
 import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -27,10 +27,10 @@ public class UserCategoryRepositoryImpl implements UserCategoryRepository {
     }
 
     @Override
-    public void replaceAll(User user, List<Category> categories) {
+    public void replaceAll(User user, List<CategoryType> categoryTypes) {
         userCategoryJpaRepository.deleteByUser(user);
-        userCategoryJpaRepository.saveAll(categories.stream()
-                .map(category -> UserCategory.create(user, category))
+        userCategoryJpaRepository.saveAll(categoryTypes.stream()
+                .map(categoryType -> UserCategory.create(user, categoryType))
                 .toList());
     }
 

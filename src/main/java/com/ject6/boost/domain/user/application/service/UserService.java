@@ -2,16 +2,17 @@ package com.ject6.boost.domain.user.application.service;
 
 import com.ject6.boost.common.exception.BusinessException;
 import com.ject6.boost.common.security.AuthenticatedUser;
+import com.ject6.boost.domain.user.application.exception.UserErrorCode;
 import com.ject6.boost.domain.user.domain.constant.ActivityType;
+import com.ject6.boost.domain.user.domain.constant.CategoryType;
 import com.ject6.boost.domain.user.domain.constant.NicknamePrefix;
 import com.ject6.boost.domain.user.domain.constant.NicknameSuffix;
-import com.ject6.boost.domain.user.domain.entity.Category;
 import com.ject6.boost.domain.user.domain.entity.Region;
 import com.ject6.boost.domain.user.domain.entity.User;
 import com.ject6.boost.domain.user.domain.entity.UserActivityType;
+import com.ject6.boost.domain.user.domain.entity.UserCategory;
 import com.ject6.boost.domain.user.domain.entity.UserRegion;
 import com.ject6.boost.domain.user.domain.repository.BlogAnalysisResultRepository;
-import com.ject6.boost.domain.user.domain.repository.CategoryRepository;
 import com.ject6.boost.domain.user.domain.repository.RegionRepository;
 import com.ject6.boost.domain.user.domain.repository.UserActivityChannelRepository;
 import com.ject6.boost.domain.user.domain.repository.UserActivityTypeRepository;
@@ -26,7 +27,6 @@ import com.ject6.boost.domain.user.presentation.dto.OnboardingProfileRequest;
 import com.ject6.boost.domain.user.presentation.dto.OnboardingProfileResponse;
 import com.ject6.boost.domain.user.presentation.dto.RandomNicknameResponse;
 import com.ject6.boost.domain.user.presentation.dto.UserMeResponse;
-import com.ject6.boost.domain.user.application.exception.UserErrorCode;
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -47,7 +47,6 @@ public class UserService {
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
-    private final CategoryRepository categoryRepository;
     private final RegionRepository regionRepository;
     private final UserCategoryRepository userCategoryRepository;
     private final UserActivityTypeRepository userActivityTypeRepository;
@@ -62,8 +61,8 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserMeResponse getMe(AuthenticatedUser principal) {
         User user = findUser(principal);
-        List<Long> categoryIds = userCategoryRepository.findByUser(user).stream()
-                .map(userCategory -> userCategory.getCategory().getId())
+        List<CategoryType> categoryTypes = userCategoryRepository.findByUser(user).stream()
+                .map(UserCategory::getCategoryType)
                 .toList();
         List<ActivityType> activityTypes = userActivityTypeRepository.findByUser(user).stream()
                 .map(UserActivityType::getActivityType)
@@ -83,7 +82,7 @@ public class UserService {
                 user.getId(),
                 user.getNickname(),
                 user.isOnboardingCompleted(),
-                categoryIds,
+                categoryTypes,
                 activityTypes,
                 regionIds,
                 activityChannels
@@ -101,7 +100,7 @@ public class UserService {
     }
 
     /**
-     * 요청한 닉네임을 사용할 수 있는지 확인하는 함수.
+     * 요청된 닉네임을 사용할 수 있는지 확인하는 함수.
      */
     public NicknameCheckResponse checkNickname(String nickname) {
         if (!StringUtils.hasText(nickname)) {
@@ -122,15 +121,14 @@ public class UserService {
         validateRequest(request);
 
         User user = findUser(principal);
-        List<Long> categoryIds = distinct(request.categoryIds());
+        List<CategoryType> categoryTypes = parseCategoryTypes(request.categoryTypes());
         List<ActivityType> activityTypes = parseActivityTypes(request.activityTypes());
         List<Long> regionIds = distinctOptional(request.regionIds());
-        List<Category> categories = findCategories(categoryIds);
         List<Region> regions = findRegions(regionIds);
 
         user.completeOnboarding(request.nickname().trim());
 
-        userCategoryRepository.replaceAll(user, categories);
+        userCategoryRepository.replaceAll(user, categoryTypes);
         userActivityTypeRepository.replaceAll(user, activityTypes);
         userRegionRepository.replaceAll(user, regions);
 
@@ -138,7 +136,7 @@ public class UserService {
                 user.getId(),
                 user.getNickname(),
                 user.isOnboardingCompleted(),
-                categoryIds,
+                categoryTypes,
                 activityTypes,
                 regionIds
         );
@@ -205,14 +203,6 @@ public class UserService {
                 .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
     }
 
-    private List<Category> findCategories(List<Long> categoryIds) {
-        List<Category> categories = categoryRepository.findByIdIn(categoryIds);
-        if (categories.size() != categoryIds.size()) {
-            throw new BusinessException(UserErrorCode.CATEGORY_NOT_FOUND);
-        }
-        return categories;
-    }
-
     private List<Region> findRegions(List<Long> regionIds) {
         List<Region> regions = regionRepository.findByIdIn(regionIds);
         if (regions.size() != regionIds.size()) {
@@ -229,11 +219,28 @@ public class UserService {
         if (nicknameLength < 2 || nicknameLength > 100) {
             throw new BusinessException(UserErrorCode.INVALID_NICKNAME_LENGTH);
         }
-        if (request.categoryIds() == null || request.categoryIds().isEmpty()) {
+        if (request.categoryTypes() == null || request.categoryTypes().isEmpty()) {
             throw new BusinessException(UserErrorCode.CATEGORY_REQUIRED);
         }
         if (request.activityTypes() == null || request.activityTypes().isEmpty()) {
             throw new BusinessException(UserErrorCode.ACTIVITY_TYPE_REQUIRED);
+        }
+    }
+
+    private List<CategoryType> parseCategoryTypes(List<String> categoryTypeValues) {
+        return distinct(categoryTypeValues).stream()
+                .map(this::parseCategoryType)
+                .toList();
+    }
+
+    private CategoryType parseCategoryType(String value) {
+        if (!StringUtils.hasText(value)) {
+            throw new BusinessException(UserErrorCode.CATEGORY_REQUIRED);
+        }
+        try {
+            return CategoryType.valueOf(value.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            throw new BusinessException(UserErrorCode.INVALID_CATEGORY_TYPE);
         }
     }
 

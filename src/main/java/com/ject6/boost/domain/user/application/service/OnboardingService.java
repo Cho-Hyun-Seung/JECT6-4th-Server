@@ -2,13 +2,13 @@ package com.ject6.boost.domain.user.application.service;
 
 import com.ject6.boost.common.exception.BusinessException;
 import com.ject6.boost.common.security.AuthenticatedUser;
+import com.ject6.boost.domain.user.application.exception.UserErrorCode;
 import com.ject6.boost.domain.user.domain.constant.ActivityType;
+import com.ject6.boost.domain.user.domain.constant.CategoryType;
 import com.ject6.boost.domain.user.domain.constant.NicknamePrefix;
 import com.ject6.boost.domain.user.domain.constant.NicknameSuffix;
-import com.ject6.boost.domain.user.domain.entity.Category;
 import com.ject6.boost.domain.user.domain.entity.Region;
 import com.ject6.boost.domain.user.domain.entity.User;
-import com.ject6.boost.domain.user.domain.repository.CategoryRepository;
 import com.ject6.boost.domain.user.domain.repository.RegionRepository;
 import com.ject6.boost.domain.user.domain.repository.UserActivityTypeRepository;
 import com.ject6.boost.domain.user.domain.repository.UserCategoryRepository;
@@ -17,7 +17,6 @@ import com.ject6.boost.domain.user.domain.repository.UserRepository;
 import com.ject6.boost.domain.user.presentation.dto.OnboardingProfileRequest;
 import com.ject6.boost.domain.user.presentation.dto.OnboardingProfileResponse;
 import com.ject6.boost.domain.user.presentation.dto.RandomNicknameResponse;
-import com.ject6.boost.domain.user.application.exception.UserErrorCode;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -36,7 +35,6 @@ public class OnboardingService {
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
-    private final CategoryRepository categoryRepository;
     private final RegionRepository regionRepository;
     private final UserCategoryRepository userCategoryRepository;
     private final UserActivityTypeRepository userActivityTypeRepository;
@@ -62,15 +60,14 @@ public class OnboardingService {
 
         User user = userRepository.findActiveById(principal.userId())
                 .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
-        List<Long> categoryIds = distinct(request.categoryIds());
+        List<CategoryType> categoryTypes = parseCategoryTypes(request.categoryTypes());
         List<ActivityType> activityTypes = parseActivityTypes(request.activityTypes());
         List<Long> regionIds = distinctOptional(request.regionIds());
-        List<Category> categories = findCategories(categoryIds);
         List<Region> regions = findRegions(regionIds);
 
         user.completeOnboarding(request.nickname().trim());
 
-        userCategoryRepository.replaceAll(user, categories);
+        userCategoryRepository.replaceAll(user, categoryTypes);
         userActivityTypeRepository.replaceAll(user, activityTypes);
         userRegionRepository.replaceAll(user, regions);
 
@@ -78,21 +75,10 @@ public class OnboardingService {
                 user.getId(),
                 user.getNickname(),
                 user.isOnboardingCompleted(),
-                categoryIds,
+                categoryTypes,
                 activityTypes,
                 regionIds
         );
-    }
-
-    /**
-     * 요청한 카테고리 id 목록을 조회하고 모두 존재하는지 검증하는 함수.
-     */
-    private List<Category> findCategories(List<Long> categoryIds) {
-        List<Category> categories = categoryRepository.findByIdIn(categoryIds);
-        if (categories.size() != categoryIds.size()) {
-            throw new BusinessException(UserErrorCode.CATEGORY_NOT_FOUND);
-        }
-        return categories;
     }
 
     /**
@@ -126,11 +112,28 @@ public class OnboardingService {
         if (nicknameLength < 2 || nicknameLength > 100) {
             throw new BusinessException(UserErrorCode.INVALID_NICKNAME_LENGTH);
         }
-        if (request.categoryIds() == null || request.categoryIds().isEmpty()) {
+        if (request.categoryTypes() == null || request.categoryTypes().isEmpty()) {
             throw new BusinessException(UserErrorCode.CATEGORY_REQUIRED);
         }
         if (request.activityTypes() == null || request.activityTypes().isEmpty()) {
             throw new BusinessException(UserErrorCode.ACTIVITY_TYPE_REQUIRED);
+        }
+    }
+
+    private List<CategoryType> parseCategoryTypes(List<String> categoryTypeValues) {
+        return distinct(categoryTypeValues).stream()
+                .map(this::parseCategoryType)
+                .toList();
+    }
+
+    private CategoryType parseCategoryType(String value) {
+        if (!StringUtils.hasText(value)) {
+            throw new BusinessException(UserErrorCode.CATEGORY_REQUIRED);
+        }
+        try {
+            return CategoryType.valueOf(value.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            throw new BusinessException(UserErrorCode.INVALID_CATEGORY_TYPE);
         }
     }
 

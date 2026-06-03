@@ -4,7 +4,7 @@ import java.util.List;
 
 public record OnboardingProfileRequest(
         String nickname,
-        List<Long> categoryIds,
+        List<String> categoryTypes,
         List<String> activityTypes,
         List<Long> regionIds
 ) {
