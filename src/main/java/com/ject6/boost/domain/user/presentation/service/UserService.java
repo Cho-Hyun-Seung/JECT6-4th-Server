@@ -30,6 +30,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final String HTTPS_URL_PREFIX = "https://";
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
@@ -117,8 +119,8 @@ public class UserService {
 
         User user = findUser(principal);
         List<Long> categoryIds = distinct(request.categoryIds());
-        List<ActivityType> activityTypes = distinct(request.activityTypes());
-        List<Long> regionIds = distinct(request.regionIds());
+        List<ActivityType> activityTypes = parseActivityTypes(request.activityTypes());
+        List<Long> regionIds = distinctOptional(request.regionIds());
         List<Category> categories = findCategories(categoryIds);
         List<Region> regions = findRegions(regionIds);
 
@@ -146,15 +148,20 @@ public class UserService {
         if (request == null || request.activityType() == null) {
             throw new BusinessException(UserErrorCode.ACTIVITY_CHANNEL_TYPE_REQUIRED);
         }
+        ActivityType activityType = parseActivityType(request.activityType());
         if (!StringUtils.hasText(request.url())) {
             throw new BusinessException(UserErrorCode.ACTIVITY_CHANNEL_URL_REQUIRED);
+        }
+        String url = request.url().trim();
+        if (!url.startsWith(HTTPS_URL_PREFIX)) {
+            throw new BusinessException(UserErrorCode.INVALID_ACTIVITY_CHANNEL_URL);
         }
 
         User user = findUser(principal);
         var channel = userActivityChannelRepository.saveOrUpdate(
                 user,
-                request.activityType(),
-                request.url().trim()
+                activityType,
+                url
         );
 
         return new ActivityChannelResponse(channel.getId(), channel.getActivityType(), channel.getUrl());
@@ -164,10 +171,8 @@ public class UserService {
      * 현재 인증된 사용자의 활동 채널 URL 연동을 해제하는 함수.
      */
     @Transactional
-    public void unlinkActivityChannel(AuthenticatedUser principal, ActivityType activityType) {
-        if (activityType == null) {
-            throw new BusinessException(UserErrorCode.ACTIVITY_CHANNEL_TYPE_REQUIRED);
-        }
+    public void unlinkActivityChannel(AuthenticatedUser principal, String activityTypeValue) {
+        ActivityType activityType = parseActivityType(activityTypeValue);
         User user = findUser(principal);
         userActivityChannelRepository.deleteByUserAndActivityType(user, activityType);
     }
@@ -219,13 +224,34 @@ public class UserService {
         if (request.activityTypes() == null || request.activityTypes().isEmpty()) {
             throw new BusinessException(UserErrorCode.ACTIVITY_TYPE_REQUIRED);
         }
-        if (request.regionIds() == null || request.regionIds().isEmpty()) {
-            throw new BusinessException(UserErrorCode.REGION_REQUIRED);
+    }
+
+    private List<ActivityType> parseActivityTypes(List<String> activityTypeValues) {
+        return distinct(activityTypeValues).stream()
+                .map(this::parseActivityType)
+                .toList();
+    }
+
+    private ActivityType parseActivityType(String value) {
+        if (!StringUtils.hasText(value)) {
+            throw new BusinessException(UserErrorCode.ACTIVITY_TYPE_REQUIRED);
+        }
+        try {
+            return ActivityType.valueOf(value.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            throw new BusinessException(UserErrorCode.INVALID_ACTIVITY_TYPE);
         }
     }
 
     private <T> List<T> distinct(List<T> values) {
         Set<T> distinctValues = new LinkedHashSet<>(values);
         return new ArrayList<>(distinctValues);
+    }
+
+    private <T> List<T> distinctOptional(List<T> values) {
+        if (values == null || values.isEmpty()) {
+            return List.of();
+        }
+        return distinct(values);
     }
 }

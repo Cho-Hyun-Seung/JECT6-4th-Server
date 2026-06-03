@@ -22,6 +22,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -62,8 +63,8 @@ public class OnboardingService {
         User user = userRepository.findById(principal.userId())
                 .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
         List<Long> categoryIds = distinct(request.categoryIds());
-        List<ActivityType> activityTypes = distinct(request.activityTypes());
-        List<Long> regionIds = distinct(request.regionIds());
+        List<ActivityType> activityTypes = parseActivityTypes(request.activityTypes());
+        List<Long> regionIds = distinctOptional(request.regionIds());
         List<Category> categories = findCategories(categoryIds);
         List<Region> regions = findRegions(regionIds);
 
@@ -131,8 +132,22 @@ public class OnboardingService {
         if (request.activityTypes() == null || request.activityTypes().isEmpty()) {
             throw new BusinessException(UserErrorCode.ACTIVITY_TYPE_REQUIRED);
         }
-        if (request.regionIds() == null || request.regionIds().isEmpty()) {
-            throw new BusinessException(UserErrorCode.REGION_REQUIRED);
+    }
+
+    private List<ActivityType> parseActivityTypes(List<String> activityTypeValues) {
+        return distinct(activityTypeValues).stream()
+                .map(this::parseActivityType)
+                .toList();
+    }
+
+    private ActivityType parseActivityType(String value) {
+        if (!StringUtils.hasText(value)) {
+            throw new BusinessException(UserErrorCode.ACTIVITY_TYPE_REQUIRED);
+        }
+        try {
+            return ActivityType.valueOf(value.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            throw new BusinessException(UserErrorCode.INVALID_ACTIVITY_TYPE);
         }
     }
 
@@ -142,5 +157,12 @@ public class OnboardingService {
     private <T> List<T> distinct(List<T> values) {
         Set<T> distinctValues = new LinkedHashSet<>(values);
         return new ArrayList<>(distinctValues);
+    }
+
+    private <T> List<T> distinctOptional(List<T> values) {
+        if (values == null || values.isEmpty()) {
+            return List.of();
+        }
+        return distinct(values);
     }
 }

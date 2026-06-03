@@ -9,7 +9,6 @@ import com.ject6.boost.domain.user.application.dto.OnboardingProfileRequest;
 import com.ject6.boost.domain.user.application.dto.OnboardingProfileResponse;
 import com.ject6.boost.domain.user.application.dto.RandomNicknameResponse;
 import com.ject6.boost.domain.user.application.dto.UserMeResponse;
-import com.ject6.boost.domain.user.domain.constant.ActivityType;
 import com.ject6.boost.domain.user.presentation.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +57,7 @@ public class UserController {
     @DeleteMapping("/me/activity-channel")
     public ApiResponse<Void> unlinkActivityChannel(
             @AuthenticationPrincipal AuthenticatedUser principal,
-            @RequestParam ActivityType activityType
+            @RequestParam String activityType
     ) {
         userService.unlinkActivityChannel(principal, activityType);
         return ApiResponse.success(null);
