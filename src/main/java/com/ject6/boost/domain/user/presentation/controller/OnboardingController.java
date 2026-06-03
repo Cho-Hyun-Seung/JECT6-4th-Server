@@ -3,6 +3,7 @@ package com.ject6.boost.domain.user.presentation.controller;
 import com.ject6.boost.common.dto.ApiResponse;
 import com.ject6.boost.common.security.authentication.AuthenticatedUser;
 import com.ject6.boost.domain.user.application.service.OnboardingService;
+import com.ject6.boost.domain.user.presentation.controller.docs.OnboardingApi;
 import com.ject6.boost.domain.user.presentation.dto.OnboardingProfileRequest;
 import com.ject6.boost.domain.user.presentation.dto.OnboardingProfileResponse;
 import lombok.RequiredArgsConstructor;

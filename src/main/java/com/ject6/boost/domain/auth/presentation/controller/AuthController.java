@@ -3,6 +3,7 @@ package com.ject6.boost.domain.auth.presentation.controller;
 import com.ject6.boost.common.dto.ApiResponse;
 import com.ject6.boost.domain.auth.application.service.AuthService;
 import com.ject6.boost.domain.auth.domain.OAuthProvider;
+import com.ject6.boost.domain.auth.presentation.controller.docs.AuthApi;
 import com.ject6.boost.domain.auth.presentation.dto.TokenRefreshResponse;
 import com.ject6.boost.domain.auth.presentation.handler.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;

@@ -1,4 +1,4 @@
-package com.ject6.boost.domain.auth.presentation.controller;
+package com.ject6.boost.domain.auth.presentation.controller.docs;
 
 import com.ject6.boost.common.dto.ApiResponse;
 import com.ject6.boost.domain.auth.presentation.dto.TokenRefreshResponse;

@@ -5,6 +5,7 @@ import com.ject6.boost.common.security.authentication.AuthenticatedUser;
 import com.ject6.boost.domain.auth.presentation.handler.OAuth2LoginSuccessHandler;
 import com.ject6.boost.domain.auth.application.service.AuthService;
 import com.ject6.boost.domain.user.application.service.UserService;
+import com.ject6.boost.domain.user.presentation.controller.docs.UserApi;
 import com.ject6.boost.domain.user.presentation.dto.ActivityChannelRequest;
 import com.ject6.boost.domain.user.presentation.dto.ActivityChannelResponse;
 import com.ject6.boost.domain.user.presentation.dto.NicknameCheckResponse;

@@ -1,4 +1,4 @@
-package com.ject6.boost.domain.user.presentation.controller;
+package com.ject6.boost.domain.user.presentation.controller.docs;
 
 import com.ject6.boost.common.dto.ApiResponse;
 import com.ject6.boost.common.security.authentication.AuthenticatedUser;
