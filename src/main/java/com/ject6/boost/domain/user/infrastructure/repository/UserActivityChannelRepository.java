@@ -1,6 +1,6 @@
 package com.ject6.boost.domain.user.infrastructure.repository;
 
-import com.ject6.boost.domain.user.domain.ActivityType;
+import com.ject6.boost.domain.user.domain.constant.ActivityType;
 import com.ject6.boost.domain.user.domain.entity.User;
 import com.ject6.boost.domain.user.domain.entity.UserActivityChannel;
 import java.util.List;
