@@ -1,4 +1,4 @@
-package com.ject6.boost.common.security;
+package com.ject6.boost.common.security.authentication;
 
 import java.util.List;
 

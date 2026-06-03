@@ -1,7 +1,7 @@
 package com.ject6.boost.domain.user.presentation.controller;
 
 import com.ject6.boost.common.dto.ApiResponse;
-import com.ject6.boost.common.security.AuthenticatedUser;
+import com.ject6.boost.common.security.authentication.AuthenticatedUser;
 import com.ject6.boost.domain.user.presentation.dto.ActivityChannelRequest;
 import com.ject6.boost.domain.user.presentation.dto.ActivityChannelResponse;
 import com.ject6.boost.domain.user.presentation.dto.NicknameCheckResponse;

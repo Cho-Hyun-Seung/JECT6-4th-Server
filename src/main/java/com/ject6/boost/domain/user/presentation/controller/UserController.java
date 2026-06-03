@@ -1,7 +1,7 @@
 package com.ject6.boost.domain.user.presentation.controller;
 
 import com.ject6.boost.common.dto.ApiResponse;
-import com.ject6.boost.common.security.AuthenticatedUser;
+import com.ject6.boost.common.security.authentication.AuthenticatedUser;
 import com.ject6.boost.domain.auth.presentation.handler.OAuth2LoginSuccessHandler;
 import com.ject6.boost.domain.auth.application.service.AuthService;
 import com.ject6.boost.domain.user.application.service.UserService;
