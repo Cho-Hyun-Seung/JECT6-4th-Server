@@ -1,5 +1,7 @@
-package com.ject6.boost.common.security;
+package com.ject6.boost.common.security.filter;
 
+import com.ject6.boost.common.security.authentication.AuthenticatedUser;
+import com.ject6.boost.common.security.jwt.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

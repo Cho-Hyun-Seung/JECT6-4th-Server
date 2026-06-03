@@ -1,4 +1,4 @@
-package com.ject6.boost.common.security;
+package com.ject6.boost.common.security.jwt;
 
 import java.time.Duration;
 import lombok.Getter;

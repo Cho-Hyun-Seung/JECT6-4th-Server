@@ -1,8 +1,8 @@
 package com.ject6.boost.common.config;
 
 import com.ject6.boost.common.exception.GlobalErrorCode;
-import com.ject6.boost.common.security.JwtAuthenticationFilter;
-import com.ject6.boost.common.security.SecurityErrorResponseWriter;
+import com.ject6.boost.common.security.filter.JwtAuthenticationFilter;
+import com.ject6.boost.common.security.handler.SecurityErrorResponseWriter;
 import com.ject6.boost.domain.auth.presentation.handler.OAuth2LoginSuccessHandler;
 import java.util.List;
 import org.springframework.context.annotation.Bean;

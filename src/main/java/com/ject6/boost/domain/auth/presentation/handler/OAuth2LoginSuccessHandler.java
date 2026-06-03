@@ -3,7 +3,7 @@ package com.ject6.boost.domain.auth.presentation.handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ject6.boost.common.dto.ApiResponse;
 import com.ject6.boost.common.exception.BusinessException;
-import com.ject6.boost.common.security.SecurityErrorResponseWriter;
+import com.ject6.boost.common.security.handler.SecurityErrorResponseWriter;
 import com.ject6.boost.domain.auth.application.exception.AuthErrorCode;
 import com.ject6.boost.domain.auth.application.service.AuthService;
 import com.ject6.boost.domain.auth.domain.OAuthProvider;

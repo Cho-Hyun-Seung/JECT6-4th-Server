@@ -1,4 +1,4 @@
-package com.ject6.boost.common.security;
+package com.ject6.boost.common.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ject6.boost.common.dto.ApiResponse;

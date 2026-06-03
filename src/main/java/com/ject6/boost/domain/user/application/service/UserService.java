@@ -1,7 +1,7 @@
 package com.ject6.boost.domain.user.application.service;
 
 import com.ject6.boost.common.exception.BusinessException;
-import com.ject6.boost.common.security.AuthenticatedUser;
+import com.ject6.boost.common.security.authentication.AuthenticatedUser;
 import com.ject6.boost.domain.user.application.exception.UserErrorCode;
 import com.ject6.boost.domain.user.domain.constant.ActivityType;
 import com.ject6.boost.domain.user.domain.constant.CategoryType;

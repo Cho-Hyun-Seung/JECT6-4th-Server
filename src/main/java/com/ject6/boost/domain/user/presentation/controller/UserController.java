@@ -1,10 +1,11 @@
 package com.ject6.boost.domain.user.presentation.controller;
 
 import com.ject6.boost.common.dto.ApiResponse;
-import com.ject6.boost.common.security.AuthenticatedUser;
+import com.ject6.boost.common.security.authentication.AuthenticatedUser;
 import com.ject6.boost.domain.auth.presentation.handler.OAuth2LoginSuccessHandler;
 import com.ject6.boost.domain.auth.application.service.AuthService;
 import com.ject6.boost.domain.user.application.service.UserService;
+import com.ject6.boost.domain.user.presentation.controller.docs.UserApi;
 import com.ject6.boost.domain.user.presentation.dto.ActivityChannelRequest;
 import com.ject6.boost.domain.user.presentation.dto.ActivityChannelResponse;
 import com.ject6.boost.domain.user.presentation.dto.NicknameCheckResponse;
@@ -12,7 +13,6 @@ import com.ject6.boost.domain.user.presentation.dto.OnboardingProfileRequest;
 import com.ject6.boost.domain.user.presentation.dto.OnboardingProfileResponse;
 import com.ject6.boost.domain.user.presentation.dto.RandomNicknameResponse;
 import com.ject6.boost.domain.user.presentation.dto.UserMeResponse;
-import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
@@ -33,20 +33,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-public class UserController {
+public class UserController implements UserApi {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final UserService userService;
     private final AuthService authService;
 
-    @Operation(summary = "내 정보 조회", description = "현재 로그인한 사용자의 프로필, 관심 카테고리, 활동 유형, 지역, 활동 채널 정보를 조회합니다.")
     @GetMapping("/me")
     public ApiResponse<UserMeResponse> getMe(@AuthenticationPrincipal AuthenticatedUser principal) {
         return ApiResponse.success(userService.getMe(principal));
     }
 
-    @Operation(summary = "프로필 수정", description = "현재 로그인한 사용자의 닉네임, 관심 카테고리, 활동 유형, 지역 정보를 수정합니다.")
     @PatchMapping("/me")
     public ApiResponse<OnboardingProfileResponse> updateProfile(
             @AuthenticationPrincipal AuthenticatedUser principal,
@@ -55,7 +53,6 @@ public class UserController {
         return ApiResponse.success(userService.updateProfile(principal, request));
     }
 
-    @Operation(summary = "활동 채널 연동", description = "현재 로그인한 사용자의 활동 채널 유형과 URL을 저장합니다. 활동 채널 유형은 BLOG, INSTAGRAM, YOUTUBE, TIKTOK, ETC 중 하나여야 합니다.")
     @PostMapping("/me/activity-channel")
     public ApiResponse<ActivityChannelResponse> linkActivityChannel(
             @AuthenticationPrincipal AuthenticatedUser principal,
@@ -64,7 +61,6 @@ public class UserController {
         return ApiResponse.success(userService.linkActivityChannel(principal, request));
     }
 
-    @Operation(summary = "활동 채널 연동 해제", description = "현재 로그인한 사용자의 특정 활동 채널 연동을 해제합니다.")
     @DeleteMapping("/me/activity-channel")
     public ApiResponse<Void> unlinkActivityChannel(
             @AuthenticationPrincipal AuthenticatedUser principal,
@@ -74,19 +70,16 @@ public class UserController {
         return ApiResponse.success(null);
     }
 
-    @Operation(summary = "닉네임 중복 확인", description = "입력한 닉네임을 사용할 수 있는지 확인합니다.")
     @GetMapping("/nickname/check")
     public ApiResponse<NicknameCheckResponse> checkNickname(@RequestParam String nickname) {
         return ApiResponse.success(userService.checkNickname(nickname));
     }
 
-    @Operation(summary = "랜덤 닉네임 생성", description = "온보딩 또는 프로필 수정에서 사용할 랜덤 닉네임 후보를 생성합니다.")
     @GetMapping("/nickname/random")
     public ApiResponse<RandomNicknameResponse> generateRandomNickname() {
         return ApiResponse.success(userService.generateRandomNickname());
     }
 
-    @Operation(summary = "회원 탈퇴", description = "현재 로그인한 사용자를 탈퇴 처리하고 access token session과 refresh token session을 제거합니다.")
     @DeleteMapping("/me")
     public ApiResponse<Void> withdraw(
             @AuthenticationPrincipal AuthenticatedUser principal,

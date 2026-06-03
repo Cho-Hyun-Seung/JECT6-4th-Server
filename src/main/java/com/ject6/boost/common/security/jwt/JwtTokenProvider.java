@@ -1,10 +1,11 @@
-package com.ject6.boost.common.security;
+package com.ject6.boost.common.security.jwt;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ject6.boost.common.exception.BusinessException;
 import com.ject6.boost.common.exception.GlobalErrorCode;
+import com.ject6.boost.common.security.authentication.AuthenticatedUser;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
