@@ -17,10 +17,13 @@ public enum UserErrorCode implements ErrorCode {
     INVALID_CATEGORY_TYPE("USER-006", "관심 카테고리는 FOOD, BEAUTY, CULTURE, TRAVEL, TECH_IT, PET, LIVING, FASHION, ETC 중 하나여야 합니다.", HttpStatus.BAD_REQUEST),
     REGION_NOT_FOUND("USER-007", "존재하지 않는 지역입니다.", HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND("USER-008", "사용자를 찾을 수 없습니다.", HttpStatus.UNAUTHORIZED),
-    ACTIVITY_CHANNEL_TYPE_REQUIRED("USER-009", "활동 채널 유형이 필요합니다.", HttpStatus.BAD_REQUEST),
-    ACTIVITY_CHANNEL_URL_REQUIRED("USER-010", "활동 채널 URL이 필요합니다.", HttpStatus.BAD_REQUEST),
-    INVALID_ACTIVITY_CHANNEL_URL("USER-011", "활동 채널 URL은 https://로 시작해야 합니다.", HttpStatus.BAD_REQUEST),
-    INVALID_ACTIVITY_TYPE("USER-012", "활동 유형은 BLOG, INSTAGRAM, YOUTUBE, TIKTOK, ETC 중 하나여야 합니다.", HttpStatus.BAD_REQUEST);
+    INVALID_ACTIVITY_TYPE("USER-012", "활동 유형은 BLOG, INSTAGRAM, YOUTUBE, TIKTOK, ETC 중 하나여야 합니다.", HttpStatus.BAD_REQUEST),
+    DUPLICATE_NICKNAME("DUPLICATE_NICKNAME", "이미 사용 중인 닉네임입니다.", HttpStatus.CONFLICT),
+    BLOG_URL_REQUIRED("USER-013", "블로그 URL이 필요합니다.", HttpStatus.BAD_REQUEST),
+    INVALID_BLOG_URL("USER-014", "유효한 블로그 URL이 아닙니다.", HttpStatus.BAD_REQUEST),
+    BLOG_PLATFORM_REQUIRED("USER-015", "블로그 플랫폼이 필요합니다.", HttpStatus.BAD_REQUEST),
+    INVALID_BLOG_PLATFORM("USER-016", "블로그 플랫폼은 NAVER 중 하나여야 합니다.", HttpStatus.BAD_REQUEST),
+    BLOG_POST_COUNT_INSUFFICIENT("BLOG_POST_COUNT_INSUFFICIENT", "블로그 포스팅이 5개 이상이어야 합니다.", HttpStatus.UNPROCESSABLE_ENTITY);
 
     private final String code;
     private final String message;

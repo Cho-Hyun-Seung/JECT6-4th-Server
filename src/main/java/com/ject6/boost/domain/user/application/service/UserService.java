@@ -4,29 +4,29 @@ import com.ject6.boost.common.exception.BusinessException;
 import com.ject6.boost.common.security.authentication.AuthenticatedUser;
 import com.ject6.boost.domain.user.application.exception.UserErrorCode;
 import com.ject6.boost.domain.user.domain.constant.ActivityType;
+import com.ject6.boost.domain.user.domain.constant.BlogPlatform;
 import com.ject6.boost.domain.user.domain.constant.CategoryType;
 import com.ject6.boost.domain.user.domain.constant.NicknamePrefix;
 import com.ject6.boost.domain.user.domain.constant.NicknameSuffix;
 import com.ject6.boost.domain.user.domain.entity.Region;
 import com.ject6.boost.domain.user.domain.entity.User;
-import com.ject6.boost.domain.user.domain.entity.UserActivityType;
-import com.ject6.boost.domain.user.domain.entity.UserCategory;
+import com.ject6.boost.domain.user.domain.entity.UserBlog;
 import com.ject6.boost.domain.user.domain.entity.UserRegion;
 import com.ject6.boost.domain.user.domain.repository.BlogAnalysisResultRepository;
 import com.ject6.boost.domain.user.domain.repository.RegionRepository;
-import com.ject6.boost.domain.user.domain.repository.UserActivityChannelRepository;
-import com.ject6.boost.domain.user.domain.repository.UserActivityTypeRepository;
-import com.ject6.boost.domain.user.domain.repository.UserCategoryRepository;
+import com.ject6.boost.domain.user.domain.repository.UserBlogRepository;
 import com.ject6.boost.domain.user.domain.repository.UserOAuthAccountRepository;
 import com.ject6.boost.domain.user.domain.repository.UserRegionRepository;
 import com.ject6.boost.domain.user.domain.repository.UserRepository;
-import com.ject6.boost.domain.user.presentation.dto.ActivityChannelRequest;
-import com.ject6.boost.domain.user.presentation.dto.ActivityChannelResponse;
+import com.ject6.boost.domain.user.infrastructure.BlogPostCountClient;
+import com.ject6.boost.domain.user.presentation.dto.BlogLinkRequest;
+import com.ject6.boost.domain.user.presentation.dto.BlogLinkResponse;
 import com.ject6.boost.domain.user.presentation.dto.NicknameCheckResponse;
-import com.ject6.boost.domain.user.presentation.dto.OnboardingProfileRequest;
-import com.ject6.boost.domain.user.presentation.dto.OnboardingProfileResponse;
+import com.ject6.boost.domain.user.presentation.dto.ProfileRequest;
+import com.ject6.boost.domain.user.presentation.dto.ProfileResponse;
 import com.ject6.boost.domain.user.presentation.dto.RandomNicknameResponse;
 import com.ject6.boost.domain.user.presentation.dto.UserMeResponse;
+import com.ject6.boost.domain.user.presentation.dto.UserProfileUpdateRequest;
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -44,16 +44,16 @@ import org.springframework.util.StringUtils;
 public class UserService {
 
     private static final String HTTPS_URL_PREFIX = "https://";
+    private static final int MIN_BLOG_POST_COUNT = 5;
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
     private final RegionRepository regionRepository;
-    private final UserCategoryRepository userCategoryRepository;
-    private final UserActivityTypeRepository userActivityTypeRepository;
     private final UserRegionRepository userRegionRepository;
-    private final UserActivityChannelRepository userActivityChannelRepository;
+    private final UserBlogRepository userBlogRepository;
     private final UserOAuthAccountRepository userOAuthAccountRepository;
     private final BlogAnalysisResultRepository blogAnalysisResultRepository;
+    private final BlogPostCountClient blogPostCountClient;
 
     /**
      * 인증된 사용자의 프로필 정보를 조회하는 함수.
@@ -61,31 +61,27 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserMeResponse getMe(AuthenticatedUser principal) {
         User user = findUser(principal);
-        List<CategoryType> categoryTypes = userCategoryRepository.findByUser(user).stream()
-                .map(UserCategory::getCategoryType)
-                .toList();
-        List<ActivityType> activityTypes = userActivityTypeRepository.findByUser(user).stream()
-                .map(UserActivityType::getActivityType)
-                .toList();
+        return toUserMeResponse(user);
+    }
+
+    private UserMeResponse toUserMeResponse(User user) {
+        List<CategoryType> categoryTypes = List.copyOf(user.getCategoryTypes());
+        List<ActivityType> activityTypes = List.copyOf(user.getActivityTypes());
         List<Long> regionIds = userRegionRepository.findByUser(user).stream()
                 .map(userRegion -> userRegion.getRegion().getId())
                 .toList();
-        List<ActivityChannelResponse> activityChannels = userActivityChannelRepository.findByUser(user).stream()
-                .map(channel -> new ActivityChannelResponse(
-                        channel.getId(),
-                        channel.getActivityType(),
-                        channel.getUrl()
-                ))
+        List<BlogLinkResponse> blogs = userBlogRepository.findActiveByUser(user).stream()
+                .map(BlogLinkResponse::from)
                 .toList();
 
         return new UserMeResponse(
                 user.getId(),
                 user.getNickname(),
-                user.isOnboardingCompleted(),
+                user.isProfileCompleted(),
                 categoryTypes,
                 activityTypes,
                 regionIds,
-                activityChannels
+                blogs
         );
     }
 
@@ -117,8 +113,8 @@ public class UserService {
      * 인증된 사용자의 프로필 정보를 수정하는 함수.
      */
     @Transactional
-    public OnboardingProfileResponse updateProfile(AuthenticatedUser principal, OnboardingProfileRequest request) {
-        validateRequest(request);
+    public ProfileResponse createProfile(AuthenticatedUser principal, ProfileRequest request) {
+        validateProfileRequest(request);
 
         User user = findUser(principal);
         List<CategoryType> categoryTypes = parseCategoryTypes(request.categoryTypes());
@@ -126,59 +122,78 @@ public class UserService {
         List<Long> regionIds = distinctOptional(request.regionIds());
         List<Region> regions = findRegions(regionIds);
 
-        user.completeOnboarding(request.nickname().trim());
+        user.createProfile(validateNickname(user, request.nickname()));
 
-        userCategoryRepository.replaceAll(user, categoryTypes);
-        userActivityTypeRepository.replaceAll(user, activityTypes);
+        user.replaceCategoryTypes(categoryTypes);
+        user.replaceActivityTypes(activityTypes);
         userRegionRepository.replaceAll(user, regions);
 
-        return new OnboardingProfileResponse(
+        return new ProfileResponse(
                 user.getId(),
                 user.getNickname(),
-                user.isOnboardingCompleted(),
+                user.isProfileCompleted(),
                 categoryTypes,
                 activityTypes,
                 regionIds
         );
     }
-
-    /**
-     * 인증된 사용자의 활동 채널 URL을 연동하거나 수정하는 함수.
-     */
     @Transactional
-    public ActivityChannelResponse linkActivityChannel(AuthenticatedUser principal, ActivityChannelRequest request) {
-        if (request == null || request.activityType() == null) {
-            throw new BusinessException(UserErrorCode.ACTIVITY_CHANNEL_TYPE_REQUIRED);
-        }
-        ActivityType activityType = parseActivityType(request.activityType());
-        if (!StringUtils.hasText(request.url())) {
-            throw new BusinessException(UserErrorCode.ACTIVITY_CHANNEL_URL_REQUIRED);
-        }
-        String url = request.url().trim();
-        if (!url.startsWith(HTTPS_URL_PREFIX)) {
-            throw new BusinessException(UserErrorCode.INVALID_ACTIVITY_CHANNEL_URL);
-        }
-
+    public UserMeResponse updateProfile(AuthenticatedUser principal, UserProfileUpdateRequest request) {
         User user = findUser(principal);
-        var channel = userActivityChannelRepository.saveOrUpdate(
-                user,
-                activityType,
-                url
-        );
+        if (request == null) {
+            return toUserMeResponse(user);
+        }
 
-        return new ActivityChannelResponse(channel.getId(), channel.getActivityType(), channel.getUrl());
+        if (request.nickname() != null) {
+            updateNickname(user, request.nickname());
+        }
+        if (request.interestCategories() != null) {
+            List<CategoryType> categoryTypes = parseCategoryTypes(request.interestCategories());
+            user.replaceCategoryTypes(categoryTypes);
+        }
+        if (request.channels() != null) {
+            List<ActivityType> activityTypes = parseActivityTypes(request.channels());
+            user.replaceActivityTypes(activityTypes);
+        }
+        if (request.regions() != null) {
+            List<Long> regionIds = distinctOptional(request.regions());
+            List<Region> regions = findRegions(regionIds);
+            userRegionRepository.replaceAll(user, regions);
+        }
+
+        return toUserMeResponse(user);
     }
 
-    /**
-     * 인증된 사용자의 활동 채널 URL 연동을 해제하는 함수.
-     */
     @Transactional
-    public void unlinkActivityChannel(AuthenticatedUser principal, String activityTypeValue) {
-        ActivityType activityType = parseActivityType(activityTypeValue);
+    public BlogLinkResponse linkBlog(AuthenticatedUser principal, BlogLinkRequest request) {
         User user = findUser(principal);
-        userActivityChannelRepository.deleteByUserAndActivityType(user, activityType);
-    }
+        if (request == null || !StringUtils.hasText(request.blogUrl())) {
+            throw new BusinessException(UserErrorCode.BLOG_URL_REQUIRED);
+        }
+        if (!StringUtils.hasText(request.platform())) {
+            throw new BusinessException(UserErrorCode.BLOG_PLATFORM_REQUIRED);
+        }
 
+        String blogUrl = request.blogUrl().trim();
+        if (!blogUrl.startsWith(HTTPS_URL_PREFIX)) {
+            throw new BusinessException(UserErrorCode.INVALID_BLOG_URL);
+        }
+
+        BlogPlatform platform = parseBlogPlatform(request.platform());
+        int postCount = blogPostCountClient.countPosts(blogUrl, platform);
+        if (postCount < MIN_BLOG_POST_COUNT) {
+            throw new BusinessException(UserErrorCode.BLOG_POST_COUNT_INSUFFICIENT);
+        }
+
+        UserBlog blog = userBlogRepository.findActiveByUserAndPlatform(user, platform)
+                .map(existingBlog -> {
+                    existingBlog.update(blogUrl);
+                    return existingBlog;
+                })
+                .orElseGet(() -> userBlogRepository.save(UserBlog.create(user, blogUrl, platform)));
+
+        return BlogLinkResponse.from(blog);
+    }
     /**
      * 인증된 사용자를 탈퇴 처리하고 연결 데이터를 soft delete 하는 함수.
      */
@@ -188,11 +203,29 @@ public class UserService {
         OffsetDateTime deletedAt = OffsetDateTime.now();
         user.withdraw(deletedAt);
         userOAuthAccountRepository.softDeleteByUser(user, deletedAt);
-        userCategoryRepository.softDeleteByUser(user, deletedAt);
-        userActivityTypeRepository.softDeleteByUser(user, deletedAt);
-        userActivityChannelRepository.softDeleteByUser(user, deletedAt);
+        userBlogRepository.softDeleteByUser(user, deletedAt);
         userRegionRepository.softDeleteByUser(user, deletedAt);
         blogAnalysisResultRepository.softDeleteByUser(user, deletedAt);
+    }
+
+    private void updateNickname(User user, String nickname) {
+        user.updateNickname(validateNickname(user, nickname));
+    }
+
+    private String validateNickname(User user, String nickname) {
+        if (!StringUtils.hasText(nickname)) {
+            throw new BusinessException(UserErrorCode.NICKNAME_REQUIRED);
+        }
+        String trimmedNickname = nickname.trim();
+        int nicknameLength = trimmedNickname.length();
+        if (nicknameLength < 2 || nicknameLength > 100) {
+            throw new BusinessException(UserErrorCode.INVALID_NICKNAME_LENGTH);
+        }
+        if (!trimmedNickname.equals(user.getNickname())
+                && userRepository.existsByNicknameAndDeletedAtIsNull(trimmedNickname)) {
+            throw new BusinessException(UserErrorCode.DUPLICATE_NICKNAME);
+        }
+        return trimmedNickname;
     }
 
     private User findUser(AuthenticatedUser principal) {
@@ -211,13 +244,9 @@ public class UserService {
         return regions;
     }
 
-    private void validateRequest(OnboardingProfileRequest request) {
-        if (request == null || !StringUtils.hasText(request.nickname())) {
+    private void validateProfileRequest(ProfileRequest request) {
+        if (request == null) {
             throw new BusinessException(UserErrorCode.NICKNAME_REQUIRED);
-        }
-        int nicknameLength = request.nickname().trim().length();
-        if (nicknameLength < 2 || nicknameLength > 100) {
-            throw new BusinessException(UserErrorCode.INVALID_NICKNAME_LENGTH);
         }
         if (request.categoryTypes() == null || request.categoryTypes().isEmpty()) {
             throw new BusinessException(UserErrorCode.CATEGORY_REQUIRED);
@@ -258,6 +287,17 @@ public class UserService {
             return ActivityType.valueOf(value.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException exception) {
             throw new BusinessException(UserErrorCode.INVALID_ACTIVITY_TYPE);
+        }
+    }
+
+    private BlogPlatform parseBlogPlatform(String value) {
+        if (!StringUtils.hasText(value)) {
+            throw new BusinessException(UserErrorCode.BLOG_PLATFORM_REQUIRED);
+        }
+        try {
+            return BlogPlatform.valueOf(value.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            throw new BusinessException(UserErrorCode.INVALID_BLOG_PLATFORM);
         }
     }
 

@@ -10,11 +10,7 @@ public interface UserRegionRepository {
 
     List<UserRegion> findByUser(User user);
 
-    List<UserRegion> saveAll(List<UserRegion> userRegions);
-
     void replaceAll(User user, List<Region> regions);
-
-    void deleteByUser(User user);
 
     int softDeleteByUser(User user, OffsetDateTime deletedAt);
 }

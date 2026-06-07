@@ -33,8 +33,8 @@ public class BlogAnalysisResult {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "activity_channel_id", nullable = false)
-    private UserActivityChannel activityChannel;
+    @JoinColumn(name = "blog_id", nullable = false)
+    private UserBlog blog;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "result", nullable = false, columnDefinition = "jsonb")

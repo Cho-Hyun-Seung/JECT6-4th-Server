@@ -8,7 +8,9 @@ import org.springframework.util.StringUtils;
 
 @RequiredArgsConstructor
 public enum OAuthProvider {
-    KAKAO("kakao");
+    KAKAO("kakao"),
+    GOOGLE("google"),
+    NAVER("naver");
 
     private final String registrationId;
 

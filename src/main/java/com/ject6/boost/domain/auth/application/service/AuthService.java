@@ -10,6 +10,7 @@ import com.ject6.boost.common.security.jwt.JwtTokenProvider;
 import com.ject6.boost.domain.auth.presentation.dto.OAuthLoginResult;
 import com.ject6.boost.domain.auth.presentation.dto.OAuthLoginResponse;
 import com.ject6.boost.domain.auth.presentation.dto.OAuthLoginUserResponse;
+import com.ject6.boost.domain.auth.presentation.dto.OAuthUserProfile;
 import com.ject6.boost.domain.auth.presentation.dto.TokenRefreshResponse;
 import com.ject6.boost.domain.auth.domain.OAuthProvider;
 import com.ject6.boost.domain.auth.infrastructure.OAuthRedisKeys;
@@ -49,16 +50,26 @@ public class AuthService {
             throw new BusinessException(AuthErrorCode.OAUTH_USER_ID_MISSING);
         }
 
-        User user = findOrCreateUser(provider, providerUserId);
+        return login(new OAuthUserProfile(provider, providerUserId, null, null, null));
+    }
+
+    @Transactional
+    public OAuthLoginResult login(OAuthUserProfile profile) {
+        if (profile == null || profile.provider() == null || !StringUtils.hasText(profile.providerUserId())) {
+            throw new BusinessException(AuthErrorCode.OAUTH_USER_ID_MISSING);
+        }
+
+        User user = findOrCreateUser(profile);
         AuthenticatedUser authenticatedUser = new AuthenticatedUser(user.getId(), List.of("USER"));
         JwtToken accessToken = issueAccessToken(authenticatedUser);
         JwtToken refreshToken = issueRefreshToken(authenticatedUser);
 
         OAuthLoginResponse response = new OAuthLoginResponse(
                 accessToken.token(),
-                TOKEN_TYPE,
+                refreshToken.token(),
                 accessToken.expiresIn(),
-                new OAuthLoginUserResponse(user.getId(), provider, user.isOnboardingCompleted())
+                TOKEN_TYPE,
+                OAuthLoginUserResponse.from(user)
         );
 
         return new OAuthLoginResult(response, refreshToken.token(), refreshToken.expiresIn());
@@ -102,16 +113,22 @@ public class AuthService {
     /**
      * 활성 OAuth 계정 사용자를 조회하거나 새 사용자 계정 연결을 생성하는 함수.
      */
-    private User findOrCreateUser(OAuthProvider provider, String providerUserId) {
+    private User findOrCreateUser(OAuthUserProfile profile) {
         Optional<UserOAuthAccount> account =
-                userOAuthAccountRepository.findActiveByProviderAndProviderUserId(provider, providerUserId);
+                userOAuthAccountRepository.findActiveByProviderAndProviderUserId(
+                        profile.provider(),
+                        profile.providerUserId()
+                );
 
         if (account.isPresent()) {
-            return account.get().getUser();
+            User user = account.get().getUser();
+            user.updateOAuthProfile(profile.nickname(), profile.profileImageUrl());
+            return user;
         }
 
         User user = userRepository.save(User.create());
-        userOAuthAccountRepository.save(UserOAuthAccount.create(user, provider, providerUserId));
+        user.updateOAuthProfile(profile.nickname(), profile.profileImageUrl());
+        userOAuthAccountRepository.save(UserOAuthAccount.create(user, profile.provider(), profile.providerUserId()));
         return user;
     }
 

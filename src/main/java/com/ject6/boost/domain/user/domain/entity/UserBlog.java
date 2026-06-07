@@ -1,6 +1,7 @@
 package com.ject6.boost.domain.user.domain.entity;
 
-import com.ject6.boost.domain.user.domain.constant.ActivityType;
+import com.ject6.boost.domain.user.domain.constant.BlogPlatform;
+import com.ject6.boost.domain.user.domain.constant.BlogStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,9 +22,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 @Getter
 @Entity
-@Table(name = "user_activity_channels")
+@Table(name = "user_blogs")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserActivityChannel {
+public class UserBlog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,12 +34,16 @@ public class UserActivityChannel {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "activity_type", nullable = false, length = 50)
-    private ActivityType activityType;
+    @Column(name = "blog_url", nullable = false, length = 500)
+    private String blogUrl;
 
-    @Column(name = "url", nullable = false, columnDefinition = "text")
-    private String url;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "platform", nullable = false, length = 50)
+    private BlogPlatform platform;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 50)
+    private BlogStatus status;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -51,21 +56,21 @@ public class UserActivityChannel {
     @Column(name = "deleted_at")
     private OffsetDateTime deletedAt;
 
-    /**
-     * 사용자 활동 채널 URL 엔티티를 생성하는 함수.
-     */
-    public static UserActivityChannel create(User user, ActivityType activityType, String url) {
-        UserActivityChannel channel = new UserActivityChannel();
-        channel.user = user;
-        channel.activityType = activityType;
-        channel.url = url;
-        return channel;
+    public static UserBlog create(User user, String blogUrl, BlogPlatform platform) {
+        UserBlog blog = new UserBlog();
+        blog.user = user;
+        blog.blogUrl = blogUrl;
+        blog.platform = platform;
+        blog.status = BlogStatus.ACTIVE;
+        return blog;
     }
 
-    /**
-     * 활동 채널 URL을 수정하는 함수.
-     */
-    public void updateUrl(String url) {
-        this.url = url;
+    public void update(String blogUrl) {
+        this.blogUrl = blogUrl;
+        this.status = BlogStatus.ACTIVE;
+    }
+
+    public void deactivate() {
+        this.status = BlogStatus.INACTIVE;
     }
 }

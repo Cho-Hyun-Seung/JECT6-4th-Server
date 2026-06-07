@@ -22,21 +22,11 @@ public class UserRegionRepositoryImpl implements UserRegionRepository {
     }
 
     @Override
-    public List<UserRegion> saveAll(List<UserRegion> userRegions) {
-        return userRegionJpaRepository.saveAll(userRegions);
-    }
-
-    @Override
     public void replaceAll(User user, List<Region> regions) {
         userRegionJpaRepository.deleteByUser(user);
         userRegionJpaRepository.saveAll(regions.stream()
                 .map(region -> UserRegion.create(user, region))
                 .toList());
-    }
-
-    @Override
-    public void deleteByUser(User user) {
-        userRegionJpaRepository.deleteByUser(user);
     }
 
     @Override

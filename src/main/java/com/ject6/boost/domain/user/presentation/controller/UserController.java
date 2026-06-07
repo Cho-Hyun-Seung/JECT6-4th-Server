@@ -2,21 +2,23 @@ package com.ject6.boost.domain.user.presentation.controller;
 
 import com.ject6.boost.common.dto.ApiResponse;
 import com.ject6.boost.common.security.authentication.AuthenticatedUser;
-import com.ject6.boost.domain.auth.presentation.handler.OAuth2LoginSuccessHandler;
 import com.ject6.boost.domain.auth.application.service.AuthService;
+import com.ject6.boost.domain.auth.presentation.handler.OAuth2LoginSuccessHandler;
 import com.ject6.boost.domain.user.application.service.UserService;
 import com.ject6.boost.domain.user.presentation.controller.docs.UserApi;
-import com.ject6.boost.domain.user.presentation.dto.ActivityChannelRequest;
-import com.ject6.boost.domain.user.presentation.dto.ActivityChannelResponse;
+import com.ject6.boost.domain.user.presentation.dto.BlogLinkRequest;
+import com.ject6.boost.domain.user.presentation.dto.BlogLinkResponse;
 import com.ject6.boost.domain.user.presentation.dto.NicknameCheckResponse;
-import com.ject6.boost.domain.user.presentation.dto.OnboardingProfileRequest;
-import com.ject6.boost.domain.user.presentation.dto.OnboardingProfileResponse;
+import com.ject6.boost.domain.user.presentation.dto.ProfileRequest;
+import com.ject6.boost.domain.user.presentation.dto.ProfileResponse;
 import com.ject6.boost.domain.user.presentation.dto.RandomNicknameResponse;
 import com.ject6.boost.domain.user.presentation.dto.UserMeResponse;
+import com.ject6.boost.domain.user.presentation.dto.UserProfileUpdateRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -46,28 +49,32 @@ public class UserController implements UserApi {
     }
 
     @PatchMapping("/me")
-    public ApiResponse<OnboardingProfileResponse> updateProfile(
+    @Override
+    public ApiResponse<UserMeResponse> updateProfile(
             @AuthenticationPrincipal AuthenticatedUser principal,
-            @RequestBody OnboardingProfileRequest request
+            @RequestBody UserProfileUpdateRequest request
     ) {
         return ApiResponse.success(userService.updateProfile(principal, request));
     }
 
-    @PostMapping("/me/activity-channel")
-    public ApiResponse<ActivityChannelResponse> linkActivityChannel(
+    @PostMapping("/me")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Override
+    public ApiResponse<ProfileResponse> createProfile(
             @AuthenticationPrincipal AuthenticatedUser principal,
-            @RequestBody ActivityChannelRequest request
+            @RequestBody ProfileRequest request
     ) {
-        return ApiResponse.success(userService.linkActivityChannel(principal, request));
+        return ApiResponse.success(userService.createProfile(principal, request));
     }
 
-    @DeleteMapping("/me/activity-channel")
-    public ApiResponse<Void> unlinkActivityChannel(
+    @PostMapping("/me/blog")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Override
+    public ApiResponse<BlogLinkResponse> linkBlog(
             @AuthenticationPrincipal AuthenticatedUser principal,
-            @RequestParam String activityType
+            @RequestBody BlogLinkRequest request
     ) {
-        userService.unlinkActivityChannel(principal, activityType);
-        return ApiResponse.success(null);
+        return ApiResponse.success(userService.linkBlog(principal, request));
     }
 
     @GetMapping("/nickname/check")

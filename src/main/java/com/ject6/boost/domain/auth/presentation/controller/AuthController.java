@@ -3,7 +3,11 @@ package com.ject6.boost.domain.auth.presentation.controller;
 import com.ject6.boost.common.dto.ApiResponse;
 import com.ject6.boost.domain.auth.application.service.AuthService;
 import com.ject6.boost.domain.auth.domain.OAuthProvider;
+import com.ject6.boost.domain.auth.infrastructure.OAuthAuthorizationCodeClient;
 import com.ject6.boost.domain.auth.presentation.controller.docs.AuthApi;
+import com.ject6.boost.domain.auth.presentation.dto.OAuthLoginRequest;
+import com.ject6.boost.domain.auth.presentation.dto.OAuthLoginResponse;
+import com.ject6.boost.domain.auth.presentation.dto.OAuthUserProfile;
 import com.ject6.boost.domain.auth.presentation.dto.TokenRefreshResponse;
 import com.ject6.boost.domain.auth.presentation.handler.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,6 +19,7 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,12 +33,21 @@ public class AuthController implements AuthApi {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final AuthService authService;
+    private final OAuthAuthorizationCodeClient oAuthAuthorizationCodeClient;
 
     @GetMapping("/login/{provider}")
     @Override
     public RedirectView login(@PathVariable String provider) {
         OAuthProvider oauthProvider = OAuthProvider.from(provider);
         return new RedirectView("/oauth2/authorization/" + oauthProvider.registrationId());
+    }
+
+    @PostMapping("/login/{provider}")
+    @Override
+    public ApiResponse<OAuthLoginResponse> login(@PathVariable String provider, @RequestBody OAuthLoginRequest request) {
+        OAuthProvider oauthProvider = OAuthProvider.from(provider);
+        OAuthUserProfile profile = oAuthAuthorizationCodeClient.fetchProfile(oauthProvider, request);
+        return ApiResponse.success(authService.login(profile).response());
     }
 
     @PostMapping("/logout")
