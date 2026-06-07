@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -72,10 +73,10 @@ public class BlogAiService {
         List<BlogAnalysisResult> results = blogAnalysisResultRepository.findByUserIdAndDeletedAtIsNull(userId);
         int visibleCount = isPremium ? results.size() : Math.min(results.size(), FREE_PLAN_VISIBLE_COUNT);
 
-        List<BlogAnalysisHistoryResponse.HistoryItem> items = results.stream()
-                .map(r -> {
-                    int idx = results.indexOf(r);
-                    boolean locked = !isPremium && idx >= FREE_PLAN_VISIBLE_COUNT;
+        List<BlogAnalysisHistoryResponse.HistoryItem> items = IntStream.range(0, results.size())
+                .mapToObj(i -> {
+                    BlogAnalysisResult r = results.get(i);
+                    boolean locked = !isPremium && i >= FREE_PLAN_VISIBLE_COUNT;
                     String channelUrl = r.getActivityChannel() != null ? r.getActivityChannel().getUrl() : null;
                     return new BlogAnalysisHistoryResponse.HistoryItem(r.getId(), channelUrl, r.getCreatedAt(), locked);
                 })

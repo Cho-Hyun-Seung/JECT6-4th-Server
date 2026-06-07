@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -89,11 +90,10 @@ public class MyService {
     @Transactional(readOnly = true)
     public List<AnalysisHistoryItemResponse> getAnalysisHistory(Long userId, boolean isPremium) {
         List<BlogAnalysisResult> results = blogAnalysisResultRepository.findByUserIdAndDeletedAtIsNull(userId);
-        return results.stream()
-                .map(r -> {
-                    int index = results.indexOf(r);
-                    boolean locked = !isPremium && index >= FREE_PLAN_VISIBLE_COUNT;
-                    return AnalysisHistoryItemResponse.from(r, locked);
+        return IntStream.range(0, results.size())
+                .mapToObj(i -> {
+                    boolean locked = !isPremium && i >= FREE_PLAN_VISIBLE_COUNT;
+                    return AnalysisHistoryItemResponse.from(results.get(i), locked);
                 })
                 .toList();
     }

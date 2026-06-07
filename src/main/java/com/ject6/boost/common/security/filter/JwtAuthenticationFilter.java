@@ -1,6 +1,8 @@
 package com.ject6.boost.common.security.filter;
 
+import com.ject6.boost.common.exception.BusinessException;
 import com.ject6.boost.common.security.authentication.AuthenticatedUser;
+import com.ject6.boost.common.security.handler.SecurityErrorResponseWriter;
 import com.ject6.boost.common.security.jwt.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,6 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final SecurityErrorResponseWriter securityErrorResponseWriter;
 
     /**
      * Authorization 헤더의 access token을 검증하고 SecurityContext에 인증 정보를 저장하는 함수.
@@ -39,7 +42,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (SecurityContextHolder.getContext().getAuthentication() == null
                 && StringUtils.hasText(authorization)
                 && authorization.startsWith(BEARER_PREFIX)) {
-            authenticateWithAccessToken(authorization.substring(BEARER_PREFIX.length()));
+            try {
+                authenticateWithAccessToken(authorization.substring(BEARER_PREFIX.length()));
+            } catch (BusinessException e) {
+                securityErrorResponseWriter.write(response, e.getErrorCode());
+                return;
+            }
         }
 
         filterChain.doFilter(request, response);

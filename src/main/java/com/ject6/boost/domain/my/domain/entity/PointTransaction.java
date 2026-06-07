@@ -43,7 +43,6 @@ public class PointTransaction {
     @Column(name = "account_holder")
     private String accountHolder;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20)
     private String status;
 
