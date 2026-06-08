@@ -3,6 +3,7 @@ package com.ject6.boost.domain.user.domain.entity;
 import com.ject6.boost.domain.user.domain.constant.ActivityType;
 import com.ject6.boost.domain.user.domain.constant.CategoryType;
 import com.ject6.boost.domain.user.domain.constant.SubscriptionType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -13,6 +14,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
@@ -56,11 +58,8 @@ public class User {
     @Column(name = "category_type", nullable = false, length = 50)
     private Set<CategoryType> categoryTypes = new LinkedHashSet<>();
 
-    @ElementCollection
-    @CollectionTable(name = "user_activity_types", joinColumns = @JoinColumn(name = "user_id"))
-    @Enumerated(EnumType.STRING)
-    @Column(name = "activity_type", nullable = false, length = 50)
-    private Set<ActivityType> activityTypes = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserActivityType> userActivityTypes = new LinkedHashSet<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -110,9 +109,18 @@ public class User {
         this.categoryTypes.addAll(categoryTypes);
     }
 
+    public Set<ActivityType> getActivityTypes() {
+        Set<ActivityType> activityTypes = new LinkedHashSet<>();
+        for (UserActivityType userActivityType : userActivityTypes) {
+            activityTypes.add(userActivityType.getActivityType());
+        }
+        return activityTypes;
+    }
+
     public void replaceActivityTypes(List<ActivityType> activityTypes) {
-        this.activityTypes.clear();
-        this.activityTypes.addAll(activityTypes);
+        this.userActivityTypes.clear();
+        new LinkedHashSet<>(activityTypes).forEach(activityType ->
+                this.userActivityTypes.add(UserActivityType.create(this, activityType)));
     }
 
     /**
@@ -128,6 +136,6 @@ public class User {
     public void withdraw(OffsetDateTime deletedAt) {
         this.deletedAt = deletedAt;
         this.categoryTypes.clear();
-        this.activityTypes.clear();
+        this.userActivityTypes.clear();
     }
 }
