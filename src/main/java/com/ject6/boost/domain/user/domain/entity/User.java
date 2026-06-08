@@ -4,16 +4,13 @@ import com.ject6.boost.domain.user.domain.constant.ActivityType;
 import com.ject6.boost.domain.user.domain.constant.CategoryType;
 import com.ject6.boost.domain.user.domain.constant.SubscriptionType;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
@@ -52,11 +49,8 @@ public class User {
     @Column(name = "profile_completed", nullable = false)
     private boolean profileCompleted = false;
 
-    @ElementCollection
-    @CollectionTable(name = "user_categories", joinColumns = @JoinColumn(name = "user_id"))
-    @Enumerated(EnumType.STRING)
-    @Column(name = "category_type", nullable = false, length = 50)
-    private Set<CategoryType> categoryTypes = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserCategory> userCategories = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserActivityType> userActivityTypes = new LinkedHashSet<>();
@@ -104,9 +98,18 @@ public class User {
         this.profileCompleted = true;
     }
 
+    public Set<CategoryType> getCategoryTypes() {
+        Set<CategoryType> categoryTypes = new LinkedHashSet<>();
+        for (UserCategory userCategory : userCategories) {
+            categoryTypes.add(userCategory.getCategoryType());
+        }
+        return categoryTypes;
+    }
+
     public void replaceCategoryTypes(List<CategoryType> categoryTypes) {
-        this.categoryTypes.clear();
-        this.categoryTypes.addAll(categoryTypes);
+        this.userCategories.clear();
+        new LinkedHashSet<>(categoryTypes).forEach(categoryType ->
+                this.userCategories.add(UserCategory.create(this, categoryType)));
     }
 
     public Set<ActivityType> getActivityTypes() {
@@ -135,7 +138,7 @@ public class User {
      */
     public void withdraw(OffsetDateTime deletedAt) {
         this.deletedAt = deletedAt;
-        this.categoryTypes.clear();
+        this.userCategories.clear();
         this.userActivityTypes.clear();
     }
 }
