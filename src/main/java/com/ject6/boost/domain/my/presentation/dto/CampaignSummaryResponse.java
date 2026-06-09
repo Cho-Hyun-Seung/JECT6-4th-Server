@@ -15,8 +15,9 @@ public record CampaignSummaryResponse(
     public static CampaignSummaryResponse from(Campaign campaign) {
         return new CampaignSummaryResponse(
                 campaign.getId(), campaign.getTitle(), campaign.getBrandName(),
-                campaign.getCategory(), campaign.getThumbnailUrl(),
-                campaign.getApplyEndDate(), campaign.getRewardAmount()
+                campaign.getCategory() != null ? campaign.getCategory().name() : null,
+                campaign.getThumbnailUrl(),
+                campaign.getApplyEndDate(), null
         );
     }
 }

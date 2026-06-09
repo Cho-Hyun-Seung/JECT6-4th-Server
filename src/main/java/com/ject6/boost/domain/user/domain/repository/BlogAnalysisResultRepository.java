@@ -10,4 +10,6 @@ public interface BlogAnalysisResultRepository {
     int softDeleteByUser(User user, OffsetDateTime deletedAt);
 
     List<BlogAnalysisResult> findByUserIdAndDeletedAtIsNull(Long userId);
+
+    List<BlogAnalysisResult> findByUserIdInAndDeletedAtIsNull(List<Long> userIds);
 }

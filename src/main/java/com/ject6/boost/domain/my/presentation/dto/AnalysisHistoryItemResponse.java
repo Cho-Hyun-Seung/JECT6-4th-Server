@@ -12,7 +12,7 @@ public record AnalysisHistoryItemResponse(
     public static AnalysisHistoryItemResponse from(BlogAnalysisResult r, boolean locked) {
         return new AnalysisHistoryItemResponse(
                 r.getId(),
-                r.getActivityChannel() != null ? r.getActivityChannel().getUrl() : null,
+                r.getBlog() != null ? r.getBlog().getBlogUrl() : null,
                 r.getCreatedAt(),
                 locked
         );

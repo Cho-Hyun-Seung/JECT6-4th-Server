@@ -1,6 +1,8 @@
 package com.ject6.boost.domain.onboarding.application.service;
 
 import com.ject6.boost.common.exception.BusinessException;
+import com.ject6.boost.domain.campaign.domain.constant.CampaignCategory;
+import com.ject6.boost.domain.campaign.domain.constant.CampaignType;
 import com.ject6.boost.domain.campaign.domain.entity.Campaign;
 import com.ject6.boost.domain.campaign.domain.repository.CampaignRepository;
 import com.ject6.boost.domain.onboarding.application.exception.OnboardingErrorCode;
@@ -62,8 +64,8 @@ public class OnboardingChatService {
             throw new BusinessException(OnboardingErrorCode.ONBOARDING_NOT_COMPLETE);
         }
 
-        String category = normalizeCategory(response.getStep1Answer());
-        String campaignType = normalizeCampaignType(response.getStep3Answer());
+        CampaignCategory category = normalizeCategory(response.getStep1Answer());
+        CampaignType campaignType = normalizeCampaignType(response.getStep3Answer());
         String activityLevel = response.getStep4Answer();
 
         List<Campaign> candidates = buildCandidates(category, campaignType);
@@ -72,7 +74,8 @@ public class OnboardingChatService {
         List<OnboardingRecommendResponse.CampaignItem> items = sorted.stream()
                 .limit(MAX_RECOMMENDATIONS)
                 .map(c -> new OnboardingRecommendResponse.CampaignItem(
-                        c.getId(), c.getTitle(), c.getCategory(),
+                        c.getId(), c.getTitle(),
+                        c.getCategory() != null ? c.getCategory().name() : null,
                         c.getThumbnailUrl(), c.getApplyEndDate()))
                 .toList();
 
@@ -94,17 +97,17 @@ public class OnboardingChatService {
      * 2순위: 카테고리만 일치
      * 3순위: 전체 활성 캠페인 fallback
      */
-    private List<Campaign> buildCandidates(String category, String campaignType) {
+    private List<Campaign> buildCandidates(CampaignCategory category, CampaignType campaignType) {
         Set<Long> seen = new LinkedHashSet<>();
         List<Campaign> result = new ArrayList<>();
 
-        if (campaignType != null) {
+        if (category != null && campaignType != null) {
             for (Campaign c : campaignRepository.findActiveByCategoryAndType(category, campaignType)) {
                 if (seen.add(c.getId())) result.add(c);
             }
         }
 
-        if (result.size() < MAX_RECOMMENDATIONS) {
+        if (category != null && result.size() < MAX_RECOMMENDATIONS) {
             for (Campaign c : campaignRepository.findActiveByCategory(category)) {
                 if (seen.add(c.getId())) result.add(c);
             }
@@ -132,8 +135,8 @@ public class OnboardingChatService {
                     .comparingInt((Campaign c) -> Boolean.TRUE.equals(c.getIsGuaranteed()) ? 0 : 1)
                     .thenComparing(c -> c.getApplyEndDate() == null ? LocalDate.MAX : c.getApplyEndDate());
             case "ACTIVE" -> Comparator
-                    .<Campaign, Integer>comparing(
-                            c -> c.getRewardAmount() == null ? 0 : c.getRewardAmount(),
+                    .<Campaign, Long>comparing(
+                            c -> c.getViewCount() == null ? 0L : c.getViewCount(),
                             Comparator.reverseOrder()
                     )
                     .thenComparing(
@@ -147,21 +150,29 @@ public class OnboardingChatService {
         return campaigns.stream().sorted(comparator).toList();
     }
 
-    private String normalizeCategory(String step1Answer) {
-        if (step1Answer == null || step1Answer.isBlank()) return "";
-        return step1Answer.trim().toUpperCase(Locale.ROOT);
+    private CampaignCategory normalizeCategory(String step1Answer) {
+        if (step1Answer == null || step1Answer.isBlank()) return null;
+        return switch (step1Answer.trim().toUpperCase(Locale.ROOT)) {
+            case "FOOD", "맛집", "카페", "맛집/카페"         -> CampaignCategory.FOOD;
+            case "BEAUTY", "뷰티", "뷰티/패션"              -> CampaignCategory.BEAUTY;
+            case "FASHION", "패션"                         -> CampaignCategory.FASHION;
+            case "TRAVEL", "여행", "숙소", "여행/숙소"       -> CampaignCategory.TRAVEL;
+            case "TECH", "TECH_IT", "IT", "제품", "IT/제품" -> CampaignCategory.TECH;
+            case "LIFE", "LIVING", "LIFESTYLE",
+                 "라이프", "생활", "라이프/기타"              -> CampaignCategory.LIFE;
+            case "PET", "펫", "반려동물"                    -> CampaignCategory.PET;
+            case "CULTURE", "문화"                         -> CampaignCategory.CULTURE;
+            case "HEALTH", "EDUCATION"                     -> CampaignCategory.ETC;
+            default                                        -> CampaignCategory.ETC;
+        };
     }
 
-    /**
-     * step3Answer(협찬 선호)를 Campaign.campaignType 값으로 변환한다.
-     * VISIT → VISIT, DELIVERY → DELIVERY, PAID → PAYBACK, ANY → null(필터 없음)
-     */
-    private String normalizeCampaignType(String step3Answer) {
+    private CampaignType normalizeCampaignType(String step3Answer) {
         if (step3Answer == null || step3Answer.isBlank()) return null;
         return switch (step3Answer.trim().toUpperCase(Locale.ROOT)) {
-            case "VISIT"    -> "VISIT";
-            case "DELIVERY" -> "DELIVERY";
-            case "PAID"     -> "PAYBACK";
+            case "VISIT"    -> CampaignType.VISIT;
+            case "DELIVERY" -> CampaignType.DELIVERY;
+            case "PAID"     -> CampaignType.PAYBACK;
             default         -> null;
         };
     }

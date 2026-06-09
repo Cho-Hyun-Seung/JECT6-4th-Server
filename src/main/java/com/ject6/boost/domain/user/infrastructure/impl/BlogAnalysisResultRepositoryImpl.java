@@ -24,4 +24,10 @@ public class BlogAnalysisResultRepositoryImpl implements BlogAnalysisResultRepos
     public List<BlogAnalysisResult> findByUserIdAndDeletedAtIsNull(Long userId) {
         return blogAnalysisResultJpaRepository.findByUserIdAndDeletedAtIsNull(userId);
     }
+
+    @Override
+    public List<BlogAnalysisResult> findByUserIdInAndDeletedAtIsNull(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) return List.of();
+        return blogAnalysisResultJpaRepository.findByUserIdInAndDeletedAtIsNull(userIds);
+    }
 }

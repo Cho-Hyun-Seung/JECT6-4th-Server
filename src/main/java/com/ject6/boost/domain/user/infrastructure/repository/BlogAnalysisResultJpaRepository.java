@@ -21,4 +21,6 @@ public interface BlogAnalysisResultJpaRepository extends JpaRepository<BlogAnaly
     int softDeleteByUser(@Param("user") User user, @Param("deletedAt") OffsetDateTime deletedAt);
 
     List<BlogAnalysisResult> findByUserIdAndDeletedAtIsNull(Long userId);
+
+    List<BlogAnalysisResult> findByUserIdInAndDeletedAtIsNull(List<Long> userIds);
 }

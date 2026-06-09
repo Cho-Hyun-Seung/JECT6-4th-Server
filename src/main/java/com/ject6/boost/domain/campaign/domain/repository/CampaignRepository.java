@@ -1,6 +1,7 @@
 package com.ject6.boost.domain.campaign.domain.repository;
 
 import com.ject6.boost.domain.campaign.domain.constant.CampaignCategory;
+import com.ject6.boost.domain.campaign.domain.constant.CampaignType;
 import com.ject6.boost.domain.campaign.domain.entity.Campaign;
 import com.ject6.boost.domain.campaign.presentation.dto.CampaignFilterRequest;
 import java.util.List;
@@ -11,6 +12,10 @@ import org.springframework.data.domain.Pageable;
 public interface CampaignRepository {
 
     Optional<Campaign> findById(Long id);
+
+    Optional<Campaign> findActiveById(Long id);
+
+    List<Campaign> findAllByIdIn(List<Long> ids);
 
     Page<Campaign> search(CampaignFilterRequest filter, Pageable pageable);
 
@@ -23,4 +28,10 @@ public interface CampaignRepository {
     List<Campaign> findGuaranteed(int limit);
 
     List<Campaign> findClosingSoon(int limit);
+
+    List<Campaign> findActiveByCategoryAndType(CampaignCategory category, CampaignType type);
+
+    List<Campaign> findActiveByCategory(CampaignCategory category);
+
+    List<Campaign> findActiveFallback(int limit);
 }

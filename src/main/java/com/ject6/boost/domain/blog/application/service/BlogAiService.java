@@ -77,7 +77,7 @@ public class BlogAiService {
                 .mapToObj(i -> {
                     BlogAnalysisResult r = results.get(i);
                     boolean locked = !isPremium && i >= FREE_PLAN_VISIBLE_COUNT;
-                    String channelUrl = r.getActivityChannel() != null ? r.getActivityChannel().getUrl() : null;
+                    String channelUrl = r.getBlog() != null ? r.getBlog().getBlogUrl() : null;
                     return new BlogAnalysisHistoryResponse.HistoryItem(r.getId(), channelUrl, r.getCreatedAt(), locked);
                 })
                 .toList();

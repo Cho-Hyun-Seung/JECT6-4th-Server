@@ -1,14 +1,19 @@
 package com.ject6.boost.domain.campaign.presentation.controller.docs;
 
 import com.ject6.boost.common.dto.ApiResponse;
+import com.ject6.boost.common.security.authentication.AuthenticatedUser;
 import com.ject6.boost.domain.campaign.presentation.dto.CampaignDetailResponse;
 import com.ject6.boost.domain.campaign.presentation.dto.CampaignFilterRequest;
 import com.ject6.boost.domain.campaign.presentation.dto.CampaignListResponse;
+import com.ject6.boost.domain.campaign.presentation.dto.LikeAnalysisResponse;
+import com.ject6.boost.domain.campaign.presentation.dto.LikeToggleResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -46,4 +51,15 @@ public interface CampaignApi {
 
     @Operation(summary = "마감 임박 공고 목록")
     ResponseEntity<ApiResponse<List<CampaignListResponse>>> getClosingSoon();
+
+    @Operation(summary = "공고 좋아요 토글", description = "좋아요 추가/취소. 인증 필요.",
+        security = @SecurityRequirement(name = "bearerAuth"))
+    ResponseEntity<ApiResponse<LikeToggleResponse>> toggleLike(
+        @PathVariable Long id,
+        @AuthenticationPrincipal AuthenticatedUser auth);
+
+    @Operation(summary = "좋아요 분석 조회",
+        description = "좋아요 5명 미만이면 analyzed=false. 5명 이상이면 좋아요한 사용자들의 블로그 특징을 pgvector 기반으로 분석해 반환.")
+    ResponseEntity<ApiResponse<LikeAnalysisResponse>> getLikeAnalysis(
+        @PathVariable Long id);
 }

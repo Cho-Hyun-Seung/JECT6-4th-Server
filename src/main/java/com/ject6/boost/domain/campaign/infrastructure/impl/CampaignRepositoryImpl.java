@@ -2,6 +2,7 @@ package com.ject6.boost.domain.campaign.infrastructure.impl;
 
 import com.ject6.boost.domain.campaign.domain.constant.CampaignCategory;
 import com.ject6.boost.domain.campaign.domain.constant.CampaignStatus;
+import com.ject6.boost.domain.campaign.domain.constant.CampaignType;
 import com.ject6.boost.domain.campaign.domain.constant.SortType;
 import com.ject6.boost.domain.campaign.domain.entity.Campaign;
 import com.ject6.boost.domain.campaign.domain.entity.QCampaign;
@@ -31,6 +32,22 @@ public class CampaignRepositoryImpl implements CampaignRepository {
     @Override
     public Optional<Campaign> findById(Long id) {
         return jpaRepository.findById(id);
+    }
+
+    @Override
+    public Optional<Campaign> findActiveById(Long id) {
+        Campaign result = queryFactory.selectFrom(c)
+            .where(c.id.eq(id)
+                .and(c.deletedAt.isNull())
+                .and(c.status.eq(CampaignStatus.ACTIVE)))
+            .fetchOne();
+        return Optional.ofNullable(result);
+    }
+
+    @Override
+    public List<Campaign> findAllByIdIn(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        return jpaRepository.findByIdIn(ids);
     }
 
     @Override
@@ -118,6 +135,43 @@ public class CampaignRepositoryImpl implements CampaignRepository {
         return jpaRepository
             .findTop10ByStatusAndApplyEndDateAfterAndDeletedAtIsNullOrderByApplyEndDateAsc(
                 CampaignStatus.ACTIVE, LocalDate.now());
+    }
+
+    @Override
+    public List<Campaign> findActiveByCategoryAndType(CampaignCategory category, CampaignType type) {
+        LocalDate today = LocalDate.now();
+        return queryFactory.selectFrom(c)
+            .where(c.deletedAt.isNull()
+                .and(c.status.eq(CampaignStatus.ACTIVE))
+                .and(c.applyEndDate.isNull().or(c.applyEndDate.goe(today)))
+                .and(c.category.eq(category))
+                .and(c.type.eq(type)))
+            .orderBy(c.createdAt.desc())
+            .fetch();
+    }
+
+    @Override
+    public List<Campaign> findActiveByCategory(CampaignCategory category) {
+        LocalDate today = LocalDate.now();
+        return queryFactory.selectFrom(c)
+            .where(c.deletedAt.isNull()
+                .and(c.status.eq(CampaignStatus.ACTIVE))
+                .and(c.applyEndDate.isNull().or(c.applyEndDate.goe(today)))
+                .and(c.category.eq(category)))
+            .orderBy(c.createdAt.desc())
+            .fetch();
+    }
+
+    @Override
+    public List<Campaign> findActiveFallback(int limit) {
+        LocalDate today = LocalDate.now();
+        return queryFactory.selectFrom(c)
+            .where(c.deletedAt.isNull()
+                .and(c.status.eq(CampaignStatus.ACTIVE))
+                .and(c.applyEndDate.isNull().or(c.applyEndDate.goe(today))))
+            .orderBy(c.createdAt.desc())
+            .limit(limit)
+            .fetch();
     }
 
     private OrderSpecifier<?> resolveOrder(SortType sort) {

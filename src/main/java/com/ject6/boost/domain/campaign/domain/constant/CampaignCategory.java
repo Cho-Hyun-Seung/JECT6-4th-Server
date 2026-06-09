@@ -4,13 +4,12 @@ public enum CampaignCategory {
 
     FOOD,
     BEAUTY,
-    TRAVEL,
-    LIFESTYLE,
-    TECH,
     FASHION,
-    HEALTH,
+    LIFE,
     PET,
-    EDUCATION,
+    TECH,
+    TRAVEL,
+    CULTURE,
     ETC
 
 }
