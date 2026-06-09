@@ -4,10 +4,10 @@ import com.ject6.boost.domain.user.domain.constant.ActivityType;
 import com.ject6.boost.domain.user.domain.constant.CategoryType;
 import java.util.List;
 
-public record OnboardingProfileResponse(
+public record ProfileResponse(
         Long userId,
         String nickname,
-        boolean onboardingCompleted,
+        boolean profileCompleted,
         List<CategoryType> categoryTypes,
         List<ActivityType> activityTypes,
         List<Long> regionIds

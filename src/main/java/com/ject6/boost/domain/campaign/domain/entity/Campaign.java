@@ -1,14 +1,18 @@
 package com.ject6.boost.domain.campaign.domain.entity;
 
+import com.ject6.boost.domain.campaign.domain.constant.CampaignCategory;
+import com.ject6.boost.domain.campaign.domain.constant.CampaignStatus;
+import com.ject6.boost.domain.campaign.domain.constant.CampaignType;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@Getter
 @Entity
 @Table(name = "campaigns")
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Campaign {
 
@@ -16,46 +20,64 @@ public class Campaign {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "title", nullable = false)
-    private String title;
+    private String sourcePlatform;
 
-    @Column(name = "brand_name")
     private String brandName;
 
-    @Column(name = "category", length = 30)
-    private String category;
+    @Column(nullable = false)
+    private String title;
 
-    @Column(name = "campaign_type", length = 30)
-    private String campaignType;
-
-    @Column(name = "channel", length = 30)
-    private String channel;
-
-    @Column(name = "region", length = 30)
-    private String region;
-
-    @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
-    @Column(name = "apply_end_date")
-    private LocalDate applyEndDate;
+    @Enumerated(EnumType.STRING)
+    private CampaignCategory category;
 
-    @Column(name = "recruit_count")
+    @Enumerated(EnumType.STRING)
+    private CampaignType type;
+
+    private String channel;
+
+    private String region;
+
+    @Column(columnDefinition = "TEXT")
+    private String providedContent;
+
     private Integer recruitCount;
 
-    @Column(name = "reward_amount")
-    private Integer rewardAmount;
+    private Integer applyCount;
 
-    @Column(name = "is_guaranteed")
+    private LocalDate applyStartDate;
+
+    private LocalDate applyEndDate;
+
+    private LocalDate announceDate;
+
+    private LocalDate purchaseStartDate;
+
+    private LocalDate purchaseEndDate;
+
+    private LocalDate reviewDeadline;
+
+    @Column(columnDefinition = "TEXT")
+    private String mission;
+
+    @Column(columnDefinition = "TEXT")
+    private String searchKeywords;
+
     private Boolean isGuaranteed;
 
-    @Column(name = "source_url")
+    @Enumerated(EnumType.STRING)
+    private CampaignStatus status;
+
     private String sourceUrl;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    private Long viewCount;
 
-    @Column(name = "deleted_at")
-    private OffsetDateTime deletedAt;
+    private LocalDateTime crawledAt;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
 }

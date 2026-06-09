@@ -28,8 +28,20 @@ public class SecurityConfig {
             "/swagger-ui.html",
             "/api/auth/login/**",
             "/api/auth/refresh",
+            "/api/users/nickname/random",
+            "/api/users/nickname/check",
             "/oauth2/**",
             "/login/oauth2/**",
+            "/campaigns",
+            "/campaigns/{id}",
+            "/campaigns/{id}/viewers",
+            "/campaigns/{id}/related",
+            "/campaigns/search",
+            "/campaigns/popular",
+            "/campaigns/guaranteed",
+            "/campaigns/closing-soon",
+            "/feed/body",
+            "/feed/blogger-stories",
             "/api/test-posts/**",
             "/onboarding/**"
     };
@@ -57,6 +69,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/feed/hero").permitAll() // JWT 있으면 읽고 없어도 허용
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
