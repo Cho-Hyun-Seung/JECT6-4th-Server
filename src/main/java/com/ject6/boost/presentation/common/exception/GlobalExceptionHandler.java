@@ -1,5 +1,9 @@
-package com.ject6.boost.application.common.exception;
+package com.ject6.boost.presentation.common.exception;
 
+import com.ject6.boost.application.common.exception.BusinessException;
+import com.ject6.boost.application.common.exception.ErrorCode;
+import com.ject6.boost.application.common.exception.GlobalErrorCode;
+import com.ject6.boost.application.common.exception.UnAuthorizationException;
 import com.ject6.boost.presentation.common.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
