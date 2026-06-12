@@ -3,6 +3,7 @@ package com.ject6.boost.domain.campaign.repository;
 import com.ject6.boost.domain.campaign.constant.CampaignCategory;
 import com.ject6.boost.domain.campaign.constant.CampaignType;
 import com.ject6.boost.domain.campaign.entity.Campaign;
+import com.ject6.boost.presentation.campaign.dto.CampaignBulkRequest;
 import com.ject6.boost.presentation.campaign.dto.CampaignFilterRequest;
 import java.util.List;
 import java.util.Optional;
@@ -34,4 +35,6 @@ public interface CampaignRepository {
     List<Campaign> findActiveByCategory(CampaignCategory category);
 
     List<Campaign> findActiveFallback(int limit);
+
+    int upsertBulk(List<CampaignBulkRequest.Item> items);
 }

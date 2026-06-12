@@ -18,6 +18,7 @@ import com.ject6.boost.domain.user.repository.UserBlogRepository;
 import com.ject6.boost.domain.user.repository.UserOAuthAccountRepository;
 import com.ject6.boost.domain.user.repository.UserRegionRepository;
 import com.ject6.boost.domain.user.repository.UserRepository;
+import com.ject6.boost.infrastructure.blog.client.CrawlerClient;
 import com.ject6.boost.infrastructure.user.BlogPostCountClient;
 import com.ject6.boost.presentation.user.dto.BlogLinkRequest;
 import com.ject6.boost.presentation.user.dto.BlogLinkResponse;
@@ -54,6 +55,7 @@ public class UserService {
     private final UserOAuthAccountRepository userOAuthAccountRepository;
     private final BlogAnalysisResultRepository blogAnalysisResultRepository;
     private final BlogPostCountClient blogPostCountClient;
+    private final CrawlerClient crawlerClient;
 
     /**
      * 인증된 사용자의 프로필 정보를 조회하는 함수.
@@ -191,6 +193,8 @@ public class UserService {
                     return existingBlog;
                 })
                 .orElseGet(() -> userBlogRepository.save(UserBlog.create(user, blogUrl, platform)));
+
+        crawlerClient.triggerBlogPostCrawl(blogUrl);
 
         return BlogLinkResponse.from(blog);
     }

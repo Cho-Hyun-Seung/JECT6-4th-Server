@@ -69,6 +69,7 @@ public class Campaign {
     @Enumerated(EnumType.STRING)
     private CampaignStatus status;
 
+    @Column(unique = true)
     private String sourceUrl;
 
     private Long viewCount;

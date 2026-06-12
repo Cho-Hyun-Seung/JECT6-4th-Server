@@ -157,9 +157,9 @@ public class OnboardingChatService {
             case "BEAUTY", "뷰티", "뷰티/패션"              -> CampaignCategory.BEAUTY;
             case "FASHION", "패션"                         -> CampaignCategory.FASHION;
             case "TRAVEL", "여행", "숙소", "여행/숙소"       -> CampaignCategory.TRAVEL;
-            case "TECH", "TECH_IT", "IT", "제품", "IT/제품" -> CampaignCategory.TECH;
+            case "TECH", "TECH_IT", "IT", "제품", "IT/제품" -> CampaignCategory.TECH_IT;
             case "LIFE", "LIVING", "LIFESTYLE",
-                 "라이프", "생활", "라이프/기타"              -> CampaignCategory.LIFE;
+                 "라이프", "생활", "라이프/기타"              -> CampaignCategory.LIVING;
             case "PET", "펫", "반려동물"                    -> CampaignCategory.PET;
             case "CULTURE", "문화"                         -> CampaignCategory.CULTURE;
             case "HEALTH", "EDUCATION"                     -> CampaignCategory.ETC;

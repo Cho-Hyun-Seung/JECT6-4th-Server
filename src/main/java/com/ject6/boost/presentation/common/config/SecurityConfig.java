@@ -27,6 +27,7 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/api/auth/login/**",
+            "/api/auth/demo-login",
             "/api/auth/refresh",
             "/api/users/nickname/random",
             "/api/users/nickname/check",
@@ -43,7 +44,8 @@ public class SecurityConfig {
             "/feed/body",
             "/feed/blogger-stories",
             "/api/test-posts/**",
-            "/onboarding/**"
+            "/onboarding/**",
+            "/internal/campaigns/bulk"
     };
 
     @Bean

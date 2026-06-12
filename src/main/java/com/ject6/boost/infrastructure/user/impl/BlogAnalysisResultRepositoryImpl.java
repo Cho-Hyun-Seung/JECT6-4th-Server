@@ -16,6 +16,11 @@ public class BlogAnalysisResultRepositoryImpl implements BlogAnalysisResultRepos
     private final BlogAnalysisResultJpaRepository blogAnalysisResultJpaRepository;
 
     @Override
+    public BlogAnalysisResult save(BlogAnalysisResult result) {
+        return blogAnalysisResultJpaRepository.save(result);
+    }
+
+    @Override
     public int softDeleteByUser(User user, OffsetDateTime deletedAt) {
         return blogAnalysisResultJpaRepository.softDeleteByUser(user, deletedAt);
     }

@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -46,4 +47,12 @@ public class BlogAnalysisResult {
 
     @Column(name = "deleted_at")
     private OffsetDateTime deletedAt;
+
+    public static BlogAnalysisResult create(User user, UserBlog blog, Long documentId) {
+        BlogAnalysisResult r = new BlogAnalysisResult();
+        r.user = user;
+        r.blog = blog;
+        r.result = Map.of("documentId", documentId);
+        return r;
+    }
 }

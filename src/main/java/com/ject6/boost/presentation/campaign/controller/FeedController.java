@@ -3,6 +3,9 @@ package com.ject6.boost.presentation.campaign.controller;
 import com.ject6.boost.presentation.common.dto.ApiResponse;
 import com.ject6.boost.presentation.common.security.authentication.AuthenticatedUser;
 import com.ject6.boost.application.campaign.service.CampaignService;
+import com.ject6.boost.domain.user.entity.User;
+import com.ject6.boost.domain.user.repository.UserBlogRepository;
+import com.ject6.boost.domain.user.repository.UserRepository;
 import com.ject6.boost.presentation.campaign.controller.docs.FeedApi;
 import com.ject6.boost.presentation.campaign.dto.CampaignListResponse;
 import com.ject6.boost.presentation.campaign.dto.FeedBodyResponse;
@@ -21,19 +24,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class FeedController {
 
     private final CampaignService campaignService;
+    private final UserRepository userRepository;
+    private final UserBlogRepository userBlogRepository;
 
     @GetMapping("/hero")
     public ResponseEntity<ApiResponse<HeroResponse>> getHero(
-        @AuthenticationPrincipal AuthenticatedUser user) {
+        @AuthenticationPrincipal AuthenticatedUser principal) {
 
         HeroResponse hero;
 
-        if (user == null) {
-            // 비로그인
+        if (principal == null) {
             hero = HeroResponse.forAnonymous();
         } else {
-            // 로그인 (블로그 연동 여부는 BC1이 AuthenticatedUser에 필드 추가 후 분기 예정)
-            hero = HeroResponse.forLoggedIn();
+            User user = userRepository.findActiveById(principal.userId()).orElse(null);
+            boolean blogLinked = user != null && !userBlogRepository.findActiveByUser(user).isEmpty();
+            hero = blogLinked ? HeroResponse.forBlogLinked() : HeroResponse.forLoggedIn();
         }
 
         return ResponseEntity.ok(ApiResponse.success(hero));

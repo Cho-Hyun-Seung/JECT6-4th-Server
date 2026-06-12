@@ -1,12 +1,13 @@
 package com.ject6.boost.application.campaign.service;
 
-import com.ject6.boost.application.common.exception.BusinessException;
-import com.ject6.boost.infrastructure.common.redis.ViewerCountService;
 import com.ject6.boost.application.campaign.exception.CampaignErrorCode;
+import com.ject6.boost.application.common.exception.BusinessException;
 import com.ject6.boost.domain.campaign.constant.UserCampaignStatus;
 import com.ject6.boost.domain.campaign.entity.Campaign;
 import com.ject6.boost.domain.campaign.repository.CampaignRepository;
 import com.ject6.boost.domain.campaign.repository.UserCampaignRepository;
+import com.ject6.boost.infrastructure.common.redis.ViewerCountService;
+import com.ject6.boost.presentation.campaign.dto.CampaignBulkRequest;
 import com.ject6.boost.presentation.campaign.dto.CampaignDetailResponse;
 import com.ject6.boost.presentation.campaign.dto.CampaignFilterRequest;
 import com.ject6.boost.presentation.campaign.dto.CampaignListResponse;
@@ -28,17 +29,17 @@ public class CampaignService {
     private final ViewerCountService viewerCountService;
 
     public Page<CampaignListResponse> getCampaigns(
-        CampaignFilterRequest filter, Pageable pageable) {
+            CampaignFilterRequest filter, Pageable pageable) {
         return getCampaigns(filter, pageable, null);
     }
 
     public Page<CampaignListResponse> getCampaigns(
-        CampaignFilterRequest filter, Pageable pageable, Long userId) {
+            CampaignFilterRequest filter, Pageable pageable, Long userId) {
         Page<Campaign> campaigns = campaignRepository.search(filter, pageable);
         Set<Long> likedCampaignIds = findLikedCampaignIds(userId, campaigns.getContent());
 
         return campaigns.map(campaign ->
-            CampaignListResponse.from(campaign, likedCampaignIds.contains(campaign.getId())));
+                CampaignListResponse.from(campaign, likedCampaignIds.contains(campaign.getId())));
     }
 
     public CampaignDetailResponse getCampaign(Long id) {
@@ -47,8 +48,7 @@ public class CampaignService {
 
     public CampaignDetailResponse getCampaign(Long id, Long userId) {
         Campaign campaign = campaignRepository.findById(id)
-            .orElseThrow(() -> new BusinessException(
-                CampaignErrorCode.CAMPAIGN_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(CampaignErrorCode.CAMPAIGN_NOT_FOUND));
         return CampaignDetailResponse.from(campaign, isLiked(userId, id));
     }
 
@@ -58,54 +58,55 @@ public class CampaignService {
 
     public List<CampaignListResponse> getRelated(Long id) {
         Campaign campaign = campaignRepository.findById(id)
-            .orElseThrow(() -> new BusinessException(
-                CampaignErrorCode.CAMPAIGN_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(CampaignErrorCode.CAMPAIGN_NOT_FOUND));
         return campaignRepository.findRelated(id, campaign.getCategory(), 3)
-            .stream()
-            .map(CampaignListResponse::from)
-            .toList();
+                .stream()
+                .map(CampaignListResponse::from)
+                .toList();
     }
 
     public List<CampaignListResponse> getPopular() {
         return campaignRepository.findPopular(10)
-            .stream()
-            .map(CampaignListResponse::from)
-            .toList();
+                .stream()
+                .map(CampaignListResponse::from)
+                .toList();
     }
 
     public List<CampaignListResponse> getGuaranteed() {
         return campaignRepository.findGuaranteed(10)
-            .stream()
-            .map(CampaignListResponse::from)
-            .toList();
+                .stream()
+                .map(CampaignListResponse::from)
+                .toList();
     }
 
     public List<CampaignListResponse> getClosingSoon() {
         return campaignRepository.findClosingSoon(10)
-            .stream()
-            .map(CampaignListResponse::from)
-            .toList();
+                .stream()
+                .map(CampaignListResponse::from)
+                .toList();
+    }
+
+    @Transactional
+    public int bulkUpsert(List<CampaignBulkRequest.Item> items) {
+        return campaignRepository.upsertBulk(items);
     }
 
     private Set<Long> findLikedCampaignIds(Long userId, List<Campaign> campaigns) {
         if (userId == null || campaigns.isEmpty()) {
             return Set.of();
         }
-
         List<Long> campaignIds = campaigns.stream()
-            .map(Campaign::getId)
-            .toList();
-
+                .map(Campaign::getId)
+                .toList();
         return Set.copyOf(userCampaignRepository.findCampaignIdsByUserIdAndCampaignIdInAndStatus(
-            userId, campaignIds, UserCampaignStatus.LIKED));
+                userId, campaignIds, UserCampaignStatus.LIKED));
     }
 
     private boolean isLiked(Long userId, Long campaignId) {
         if (userId == null) {
             return false;
         }
-
         return userCampaignRepository.existsByUserIdAndCampaignIdAndStatus(
-            userId, campaignId, UserCampaignStatus.LIKED);
+                userId, campaignId, UserCampaignStatus.LIKED);
     }
 }

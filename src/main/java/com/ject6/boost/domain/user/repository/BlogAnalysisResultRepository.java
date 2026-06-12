@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface BlogAnalysisResultRepository {
 
+    BlogAnalysisResult save(BlogAnalysisResult result);
+
     int softDeleteByUser(User user, OffsetDateTime deletedAt);
 
     List<BlogAnalysisResult> findByUserIdAndDeletedAtIsNull(Long userId);

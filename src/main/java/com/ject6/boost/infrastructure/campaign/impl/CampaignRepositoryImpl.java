@@ -8,6 +8,7 @@ import com.ject6.boost.domain.campaign.entity.Campaign;
 import com.ject6.boost.domain.campaign.entity.QCampaign;
 import com.ject6.boost.domain.campaign.repository.CampaignRepository;
 import com.ject6.boost.infrastructure.campaign.repository.CampaignJpaRepository;
+import com.ject6.boost.presentation.campaign.dto.CampaignBulkRequest;
 import com.ject6.boost.presentation.campaign.dto.CampaignFilterRequest;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -27,6 +29,7 @@ public class CampaignRepositoryImpl implements CampaignRepository {
 
     private final CampaignJpaRepository jpaRepository;
     private final JPAQueryFactory queryFactory;
+    private final JdbcTemplate jdbcTemplate;
     private final QCampaign c = QCampaign.campaign;
 
     @Override
@@ -172,6 +175,50 @@ public class CampaignRepositoryImpl implements CampaignRepository {
             .orderBy(c.createdAt.desc())
             .limit(limit)
             .fetch();
+    }
+
+    @Override
+    public int upsertBulk(List<CampaignBulkRequest.Item> items) {
+        if (items == null || items.isEmpty()) return 0;
+        int count = 0;
+        for (CampaignBulkRequest.Item item : items) {
+            if (item.sourceUrl() == null || item.sourceUrl().isBlank()) continue;
+            try {
+                int rows = jdbcTemplate.update("""
+                    INSERT INTO campaigns
+                      (source_platform, brand_name, title, thumbnail_url, category, type, channel, region,
+                       provided_content, recruit_count, apply_start_date, apply_end_date,
+                       mission, source_url, is_guaranteed, status, view_count, crawled_at, created_at, updated_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'ACTIVE',0,now(),now(),now())
+                    ON CONFLICT (source_url) DO UPDATE SET
+                      title=EXCLUDED.title,
+                      category=EXCLUDED.category,
+                      type=EXCLUDED.type,
+                      provided_content=EXCLUDED.provided_content,
+                      recruit_count=EXCLUDED.recruit_count,
+                      apply_end_date=EXCLUDED.apply_end_date,
+                      mission=EXCLUDED.mission,
+                      thumbnail_url=EXCLUDED.thumbnail_url,
+                      updated_at=now()
+                    """,
+                    item.sourcePlatform(), item.brandName(), item.title(), item.thumbnailUrl(),
+                    item.category(), item.type(),
+                    item.channel() != null ? item.channel() : "BLOG",
+                    item.region(),
+                    item.providedContent(), item.recruitCount(),
+                    item.applyStartDate() != null ? java.sql.Date.valueOf(item.applyStartDate()) : null,
+                    item.applyEndDate() != null ? java.sql.Date.valueOf(item.applyEndDate()) : null,
+                    item.mission(), item.sourceUrl(),
+                    item.isGuaranteed() != null && item.isGuaranteed()
+                );
+                count += rows;
+            } catch (Exception e) {
+                // best-effort: 개별 항목 실패 시 로그 후 계속
+                org.slf4j.LoggerFactory.getLogger(getClass())
+                    .warn("campaign upsert 실패 sourceUrl={}: {}", item.sourceUrl(), e.getMessage());
+            }
+        }
+        return count;
     }
 
     private OrderSpecifier<?> resolveOrder(SortType sort) {

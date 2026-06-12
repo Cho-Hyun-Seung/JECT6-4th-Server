@@ -61,9 +61,7 @@ public class PgvectorBlogRecommendationRepository implements BlogRecommendationR
                     ranked.score AS fitness_score,
                     ranked.score AS selection_score
                 FROM ranked
-                JOIN campaigns ca
-                  ON ranked.external_id ~ '^[0-9]+$'
-                 AND ca.id = ranked.external_id::bigint
+                JOIN campaigns ca ON ca.source_url = ranked.external_id
                 WHERE ca.deleted_at IS NULL
                 ORDER BY ranked.score DESC
                 LIMIT ?
