@@ -3,7 +3,7 @@ spring:
     name: boost-backend
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/boost}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/boost_demo}
     username: ${SPRING_DATASOURCE_USERNAME:boost}
     password: ${SPRING_DATASOURCE_PASSWORD:boost}
     driver-class-name: org.postgresql.Driver
