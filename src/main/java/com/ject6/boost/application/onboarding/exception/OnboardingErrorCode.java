@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 public enum OnboardingErrorCode implements ErrorCode {
     SESSION_NOT_FOUND("ONBOARD-001", "온보딩 세션을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     ONBOARDING_NOT_COMPLETE("ONBOARD-002", "온보딩이 완료되지 않았습니다.", HttpStatus.BAD_REQUEST),
-    INVALID_STEP("ONBOARD-003", "유효하지 않은 단계입니다. (1~4)", HttpStatus.BAD_REQUEST);
+    INVALID_STEP("ONBOARD-003", "유효하지 않은 단계입니다. (1~6)", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String message;

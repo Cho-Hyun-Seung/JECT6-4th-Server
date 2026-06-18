@@ -35,7 +35,7 @@ public class OnboardingChatService {
 
     @Transactional
     public OnboardingStepResponse saveStep(OnboardingStepRequest request) {
-        if (request.step() < 1 || request.step() > 4) {
+        if (request.step() < 1 || request.step() > 6) {
             throw new BusinessException(OnboardingErrorCode.INVALID_STEP);
         }
 
@@ -47,12 +47,26 @@ public class OnboardingChatService {
         OnboardingResponse response = onboardingResponseRepository.findBySessionId(resolvedSessionId)
                 .orElseGet(() -> OnboardingResponse.create(resolvedSessionId));
 
-        response.applyStep(request.step(), request.answer());
+        applyOnboardingStep(response, request);
         onboardingResponseRepository.save(response);
 
         boolean complete = response.isComplete();
-        Integer nextStep = complete ? null : request.step() + 1;
+        Integer nextStep = complete || request.step() == 6 ? null : request.step() + 1;
         return new OnboardingStepResponse(resolvedSessionId, request.step(), complete, nextStep);
+    }
+
+    private void applyOnboardingStep(OnboardingResponse response, OnboardingStepRequest request) {
+        switch (request.step()) {
+            case 1, 2, 3, 4 -> {
+                if (request.answer() == null || request.answer().isBlank()) {
+                    throw new BusinessException(OnboardingErrorCode.INVALID_STEP);
+                }
+                response.applyStep(request.step(), request.answer());
+            }
+            case 5 -> response.updateRegionIds(request.regionIds());
+            case 6 -> response.updateActivityTypes(request.activityTypes());
+            default -> throw new BusinessException(OnboardingErrorCode.INVALID_STEP);
+        }
     }
 
     @Transactional(readOnly = true)

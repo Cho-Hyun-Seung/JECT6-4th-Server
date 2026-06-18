@@ -4,8 +4,6 @@ import java.util.List;
 
 public record ProfileRequest(
         String nickname,
-        List<String> categoryTypes,
-        List<String> activityTypes,
-        List<Long> regionIds
+        List<String> categoryTypes
 ) {
 }

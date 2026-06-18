@@ -1,7 +1,5 @@
 package com.ject6.boost.presentation.auth.handler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ject6.boost.presentation.common.dto.ApiResponse;
 import com.ject6.boost.application.common.exception.BusinessException;
 import com.ject6.boost.presentation.common.security.handler.SecurityErrorResponseWriter;
 import com.ject6.boost.application.auth.exception.AuthErrorCode;
@@ -16,8 +14,8 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +23,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @RequiredArgsConstructor
@@ -33,11 +32,13 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
 
     private final AuthService authService;
-    private final ObjectMapper objectMapper;
     private final SecurityErrorResponseWriter securityErrorResponseWriter;
 
+    @Value("${app.frontend.oauth-callback-url:http://localhost:3000/auth/callback}")
+    private String frontendOAuthCallbackUrl;
+
     /**
-     * Handles OAuth2 login success and returns service tokens as a JSON response.
+     * Handles OAuth2 login success and redirects to the frontend callback with service tokens.
      */
     @Override
     public void onAuthenticationSuccess(
@@ -59,11 +60,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             }
             SecurityContextHolder.clearContext();
 
-            response.setStatus(HttpServletResponse.SC_OK);
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.setCharacterEncoding("UTF-8");
             response.addHeader(HttpHeaders.SET_COOKIE, createRefreshTokenCookie(loginResult).toString());
-            objectMapper.writeValue(response.getWriter(), ApiResponse.success(loginResponse));
+            response.sendRedirect(createFrontendCallbackUrl(loginResponse));
         } catch (BusinessException exception) {
             securityErrorResponseWriter.write(response, exception.getErrorCode());
         }
@@ -80,6 +78,17 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 .path("/api/auth/refresh")
                 .maxAge(Duration.ofSeconds(loginResult.refreshTokenExpiresIn()))
                 .build();
+    }
+
+    private String createFrontendCallbackUrl(OAuthLoginResponse loginResponse) {
+        return UriComponentsBuilder.fromUriString(frontendOAuthCallbackUrl)
+                .queryParam("accessToken", loginResponse.accessToken())
+                .queryParam("refreshToken", loginResponse.refreshToken())
+                .queryParam("tokenType", loginResponse.tokenType())
+                .queryParam("expiresIn", loginResponse.expiresIn())
+                .build()
+                .encode()
+                .toUriString();
     }
 
     /**

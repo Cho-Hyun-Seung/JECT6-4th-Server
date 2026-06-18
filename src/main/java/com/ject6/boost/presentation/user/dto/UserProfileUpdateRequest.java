@@ -6,8 +6,6 @@ import java.util.List;
 public record UserProfileUpdateRequest(
         String nickname,
         @JsonProperty("interest_categories")
-        List<String> interestCategories,
-        List<String> channels,
-        List<Long> regions
+        List<String> interestCategories
 ) {
 }

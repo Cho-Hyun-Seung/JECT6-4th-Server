@@ -11,9 +11,20 @@ import lombok.Setter;
 @Setter
 public class CampaignFilterRequest {
     private List<CampaignCategory> categories;
+    private CampaignCategory category;
     private CampaignType type;
     private String region;
     private String sourcePlatform;
     private String channel;
     private SortType sort;
+
+    public List<CampaignCategory> getCategories() {
+        if (categories != null && !categories.isEmpty()) {
+            return categories;
+        }
+        if (category != null) {
+            return List.of(category);
+        }
+        return null;
+    }
 }
