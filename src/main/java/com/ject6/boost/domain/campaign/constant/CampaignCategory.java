@@ -1,5 +1,7 @@
 package com.ject6.boost.domain.campaign.constant;
 
+import java.util.Locale;
+
 public enum CampaignCategory {
 
     FOOD,
@@ -10,6 +12,9 @@ public enum CampaignCategory {
     TECH_IT,
     TRAVEL,
     CULTURE,
-    ETC
+    ETC;
 
+    public static CampaignCategory from(String value) {
+        return CampaignCategory.valueOf(value.trim().toUpperCase(Locale.ROOT));
+    }
 }

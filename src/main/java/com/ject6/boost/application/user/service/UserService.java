@@ -94,7 +94,7 @@ public class UserService {
         String prefix = NicknamePrefix.randomValue(RANDOM);
         String suffix = NicknameSuffix.randomValue(RANDOM);
         int number = RANDOM.nextInt(9000) + 1000;
-        return new RandomNicknameResponse(prefix + " " + suffix + number);
+        return new RandomNicknameResponse(prefix + suffix + number);
     }
 
     /**
@@ -120,23 +120,19 @@ public class UserService {
 
         User user = findUser(principal);
         List<CategoryType> categoryTypes = parseCategoryTypes(request.categoryTypes());
-        List<ActivityType> activityTypes = parseActivityTypes(request.activityTypes());
-        List<Long> regionIds = distinctOptional(request.regionIds());
-        List<Region> regions = findRegions(regionIds);
 
         user.createProfile(validateNickname(user, request.nickname()));
-
         user.replaceCategoryTypes(categoryTypes);
-        user.replaceActivityTypes(activityTypes);
-        userRegionRepository.replaceAll(user, regions);
 
         return new ProfileResponse(
                 user.getId(),
                 user.getNickname(),
                 user.isProfileCompleted(),
                 categoryTypes,
-                activityTypes,
-                regionIds
+                List.copyOf(user.getActivityTypes()),
+                userRegionRepository.findByUser(user).stream()
+                        .map(userRegion -> userRegion.getRegion().getId())
+                        .toList()
         );
     }
     @Transactional
@@ -152,15 +148,6 @@ public class UserService {
         if (request.interestCategories() != null) {
             List<CategoryType> categoryTypes = parseCategoryTypes(request.interestCategories());
             user.replaceCategoryTypes(categoryTypes);
-        }
-        if (request.channels() != null) {
-            List<ActivityType> activityTypes = parseActivityTypes(request.channels());
-            user.replaceActivityTypes(activityTypes);
-        }
-        if (request.regions() != null) {
-            List<Long> regionIds = distinctOptional(request.regions());
-            List<Region> regions = findRegions(regionIds);
-            userRegionRepository.replaceAll(user, regions);
         }
 
         return toUserMeResponse(user);
@@ -254,9 +241,6 @@ public class UserService {
         }
         if (request.categoryTypes() == null || request.categoryTypes().isEmpty()) {
             throw new BusinessException(UserErrorCode.CATEGORY_REQUIRED);
-        }
-        if (request.activityTypes() == null || request.activityTypes().isEmpty()) {
-            throw new BusinessException(UserErrorCode.ACTIVITY_TYPE_REQUIRED);
         }
     }
 
