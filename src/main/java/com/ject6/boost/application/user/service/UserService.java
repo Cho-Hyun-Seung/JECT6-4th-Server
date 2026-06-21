@@ -181,7 +181,8 @@ public class UserService {
                 })
                 .orElseGet(() -> userBlogRepository.save(UserBlog.create(user, blogUrl, platform)));
 
-        crawlerClient.triggerBlogPostCrawl(blogUrl);
+        // 블로그 연동 시 초기 색인 크롤링. 분석 요청 없으므로 correlationId=null.
+        crawlerClient.triggerBlogPostCrawl(blogUrl, user.getId(), blog.getId(), null);
 
         return BlogLinkResponse.from(blog);
     }

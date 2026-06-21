@@ -20,15 +20,28 @@ public class CrawlerClient {
                 .build();
     }
 
-    public void triggerBlogPostCrawl(String blogUrl) {
+    public void triggerBlogPostCrawl(String blogUrl, Long userId, Long blogId, String correlationId) {
+        triggerBlogPostCrawl(blogUrl, userId, blogId, correlationId, null, null);
+    }
+
+    public void triggerBlogPostCrawl(String blogUrl, Long userId, Long blogId, String correlationId,
+                                     String analysisMode, String batchId) {
         try {
+            Map<String, Object> body = new java.util.HashMap<>();
+            body.put("blog_url", blogUrl);
+            body.put("user_id", userId);
+            body.put("blog_id", blogId);
+            body.put("correlation_id", correlationId);
+            if (analysisMode != null) body.put("analysis_mode", analysisMode);
+            if (batchId != null) body.put("batch_id", batchId);
             restClient.post()
                     .uri("/crawl/blog-posts")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("blog_url", blogUrl))
+                    .body(body)
                     .retrieve()
                     .toBodilessEntity();
-            log.info("crawler: blog post crawl triggered blogUrl={}", blogUrl);
+            log.info("crawler: blog post crawl triggered blogUrl={} correlationId={} mode={} batchId={}",
+                    blogUrl, correlationId, analysisMode, batchId);
         } catch (Exception e) {
             log.warn("crawler: blog post crawl trigger 실패 (best-effort) blogUrl={}: {}", blogUrl, e.getMessage());
         }

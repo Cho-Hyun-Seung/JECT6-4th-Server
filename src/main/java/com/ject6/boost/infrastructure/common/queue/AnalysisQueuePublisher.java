@@ -14,7 +14,21 @@ public class AnalysisQueuePublisher {
     public void publish(Long userId, Long documentId) {
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.ANALYSIS_QUEUE,
-                new AnalysisMessage(userId, documentId)
+                new AnalysisMessage(userId, documentId, null, null)
+        );
+    }
+
+    public void publishWithCorrelation(Long userId, Long documentId, String correlationId) {
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.ANALYSIS_QUEUE,
+                new AnalysisMessage(userId, documentId, correlationId, null)
+        );
+    }
+
+    public void publishWithMode(Long userId, Long documentId, String correlationId, String analysisMode) {
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.ANALYSIS_QUEUE,
+                new AnalysisMessage(userId, documentId, correlationId, analysisMode)
         );
     }
 }

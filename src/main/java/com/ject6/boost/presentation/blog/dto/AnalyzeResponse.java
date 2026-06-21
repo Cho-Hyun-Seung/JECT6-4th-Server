@@ -4,5 +4,7 @@ public record AnalyzeResponse(
         Long documentId,
         String status,
         String message,
-        Integer aiCreditRemaining
+        Integer aiCreditRemaining,
+        String correlationId,
+        String batchId
 ) {}

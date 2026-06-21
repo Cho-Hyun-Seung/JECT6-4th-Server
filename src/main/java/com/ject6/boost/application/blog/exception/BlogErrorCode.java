@@ -14,7 +14,8 @@ public enum BlogErrorCode implements ErrorCode {
     BLOG_NOT_CONNECTED("BLOG-003", "블로그가 연동되지 않았습니다.", HttpStatus.UNPROCESSABLE_ENTITY),
     CHAT_TOKEN_LIMIT_EXCEEDED("BLOG-004", "채팅 토큰 한도를 초과했습니다. 새 세션으로 시작해주세요.", HttpStatus.BAD_REQUEST),
     CHAT_RATE_LIMIT_EXCEEDED("BLOG-005", "채팅 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS),
-    ANALYZE_SERVER_ERROR("BLOG-006", "AI 분석 서버 오류가 발생했습니다.", HttpStatus.BAD_GATEWAY);
+    ANALYZE_SERVER_ERROR("BLOG-006", "AI 분석 서버 오류가 발생했습니다.", HttpStatus.BAD_GATEWAY),
+    INVALID_ANALYSIS_MODE("BLOG-007", "analysisMode는 FULL_BLOG 또는 POST 중 하나여야 합니다.", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String message;

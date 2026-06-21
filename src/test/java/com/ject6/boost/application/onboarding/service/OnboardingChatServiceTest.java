@@ -1,6 +1,8 @@
 package com.ject6.boost.application.onboarding.service;
 
 import com.ject6.boost.application.common.exception.BusinessException;
+import com.ject6.boost.domain.campaign.constant.CampaignCategory;
+import com.ject6.boost.domain.campaign.constant.CampaignType;
 import com.ject6.boost.domain.campaign.entity.Campaign;
 import com.ject6.boost.domain.campaign.repository.CampaignRepository;
 import com.ject6.boost.application.onboarding.exception.OnboardingErrorCode;
@@ -72,8 +74,8 @@ class OnboardingChatServiceTest {
         given(onboardingResponseRepository.findBySessionId(SESSION_ID)).willReturn(Optional.of(complete));
 
         List<Campaign> matched = buildCampaigns(5, "BEAUTY", "DELIVERY");
-        given(campaignRepository.findActiveByCategoryAndType("BEAUTY", "DELIVERY")).willReturn(matched);
-        given(campaignRepository.findActiveByCategory("BEAUTY")).willReturn(List.of());
+        given(campaignRepository.findActiveByCategoryAndType(CampaignCategory.BEAUTY, CampaignType.DELIVERY)).willReturn(matched);
+        given(campaignRepository.findActiveByCategory(CampaignCategory.BEAUTY)).willReturn(List.of());
 
         OnboardingRecommendResponse result = onboardingChatService.getRecommendations(SESSION_ID);
 
@@ -92,8 +94,8 @@ class OnboardingChatServiceTest {
         for (int i = 4; i <= 13; i++) {
             categoryResults.add(buildCampaign((long) i, "FOOD", "DELIVERY", null, null, null));
         }
-        given(campaignRepository.findActiveByCategoryAndType("FOOD", "VISIT")).willReturn(p1Results);
-        given(campaignRepository.findActiveByCategory("FOOD")).willReturn(categoryResults);
+        given(campaignRepository.findActiveByCategoryAndType(CampaignCategory.FOOD, CampaignType.VISIT)).willReturn(p1Results);
+        given(campaignRepository.findActiveByCategory(CampaignCategory.FOOD)).willReturn(categoryResults);
 
         OnboardingRecommendResponse result = onboardingChatService.getRecommendations(SESSION_ID);
 
@@ -111,7 +113,7 @@ class OnboardingChatServiceTest {
         for (int i = 3; i <= 17; i++) {
             fallback.add(buildCampaign((long) i, "FOOD", null, null, null, null));
         }
-        given(campaignRepository.findActiveByCategory("TRAVEL")).willReturn(categoryResults);
+        given(campaignRepository.findActiveByCategory(CampaignCategory.TRAVEL)).willReturn(categoryResults);
         given(campaignRepository.findActiveFallback(20)).willReturn(fallback);
 
         OnboardingRecommendResponse result = onboardingChatService.getRecommendations(SESSION_ID);
@@ -124,7 +126,7 @@ class OnboardingChatServiceTest {
     void getRecommendations_returnsEmptyWhenNoCampaigns() {
         OnboardingResponse complete = completeSession("PET", "YES", "ANY", "MIDDLE");
         given(onboardingResponseRepository.findBySessionId(SESSION_ID)).willReturn(Optional.of(complete));
-        given(campaignRepository.findActiveByCategory("PET")).willReturn(List.of());
+        given(campaignRepository.findActiveByCategory(CampaignCategory.PET)).willReturn(List.of());
         given(campaignRepository.findActiveFallback(20)).willReturn(List.of());
 
         OnboardingRecommendResponse result = onboardingChatService.getRecommendations(SESSION_ID);
@@ -140,7 +142,7 @@ class OnboardingChatServiceTest {
 
         Campaign notGuaranteed = buildCampaign(1L, "BEAUTY", null, false, null, null);
         Campaign guaranteed = buildCampaign(2L, "BEAUTY", null, true, null, null);
-        given(campaignRepository.findActiveByCategory("BEAUTY")).willReturn(List.of(notGuaranteed, guaranteed));
+        given(campaignRepository.findActiveByCategory(CampaignCategory.BEAUTY)).willReturn(List.of(notGuaranteed, guaranteed));
         given(campaignRepository.findActiveFallback(20)).willReturn(List.of());
 
         OnboardingRecommendResponse result = onboardingChatService.getRecommendations(SESSION_ID);
@@ -156,7 +158,7 @@ class OnboardingChatServiceTest {
 
         Campaign lowReward = buildCampaign(1L, "FASHION", null, null, 1000, null);
         Campaign highReward = buildCampaign(2L, "FASHION", null, null, 50000, null);
-        given(campaignRepository.findActiveByCategory("FASHION")).willReturn(List.of(lowReward, highReward));
+        given(campaignRepository.findActiveByCategory(CampaignCategory.FASHION)).willReturn(List.of(lowReward, highReward));
         given(campaignRepository.findActiveFallback(20)).willReturn(List.of());
 
         OnboardingRecommendResponse result = onboardingChatService.getRecommendations(SESSION_ID);
@@ -171,8 +173,8 @@ class OnboardingChatServiceTest {
         given(onboardingResponseRepository.findBySessionId(SESSION_ID)).willReturn(Optional.of(complete));
 
         List<Campaign> sharedCampaigns = buildCampaigns(5, "FOOD", "DELIVERY");
-        given(campaignRepository.findActiveByCategoryAndType("FOOD", "DELIVERY")).willReturn(sharedCampaigns);
-        given(campaignRepository.findActiveByCategory("FOOD")).willReturn(sharedCampaigns);
+        given(campaignRepository.findActiveByCategoryAndType(CampaignCategory.FOOD, CampaignType.DELIVERY)).willReturn(sharedCampaigns);
+        given(campaignRepository.findActiveByCategory(CampaignCategory.FOOD)).willReturn(sharedCampaigns);
 
         OnboardingRecommendResponse result = onboardingChatService.getRecommendations(SESSION_ID);
 
@@ -188,6 +190,8 @@ class OnboardingChatServiceTest {
         r.applyStep(2, step2);
         r.applyStep(3, step3);
         r.applyStep(4, step4);
+        r.updateRegionIds(List.of(1L));
+        r.updateActivityTypes(List.of("NAVER"));
         return r;
     }
 
@@ -204,10 +208,11 @@ class OnboardingChatServiceTest {
         Campaign c = mock(Campaign.class);
         given(c.getId()).willReturn(id);
         given(c.getTitle()).willReturn("테스트 캠페인 " + id);
-        given(c.getCategory()).willReturn(category);
-        given(c.getCampaignType()).willReturn(campaignType);
+        given(c.getCategory()).willReturn(category == null ? null : CampaignCategory.valueOf(category));
+        given(c.getType()).willReturn(campaignType == null ? null : CampaignType.valueOf(campaignType));
         given(c.getIsGuaranteed()).willReturn(isGuaranteed);
-        given(c.getRewardAmount()).willReturn(rewardAmount);
+        given(c.getViewCount()).willReturn(rewardAmount == null ? null : rewardAmount.longValue());
+        given(c.getRecruitCount()).willReturn(rewardAmount);
         given(c.getApplyEndDate()).willReturn(applyEndDate);
         return c;
     }
