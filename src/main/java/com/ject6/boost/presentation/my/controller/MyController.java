@@ -2,7 +2,7 @@ package com.ject6.boost.presentation.my.controller;
 
 import com.ject6.boost.presentation.common.dto.ApiResponse;
 import com.ject6.boost.presentation.common.security.authentication.AuthenticatedUser;
-import com.ject6.boost.domain.campaign.constant.UserCampaignStatus;
+import com.ject6.boost.domain.campaign.constant.CampaignApplyStatus;
 import com.ject6.boost.application.my.service.MyService;
 import com.ject6.boost.presentation.my.controller.docs.MyApi;
 import com.ject6.boost.presentation.my.dto.*;
@@ -23,7 +23,7 @@ public class MyController implements MyApi {
     @Override
     public ApiResponse<List<MyCampaignListResponse>> getMyCampaigns(
             @AuthenticationPrincipal AuthenticatedUser principal,
-            @RequestParam(required = false) UserCampaignStatus status) {
+            @RequestParam(required = false) CampaignApplyStatus status) {
         return ApiResponse.success(myService.getMyCampaigns(principal.userId(), status));
     }
 

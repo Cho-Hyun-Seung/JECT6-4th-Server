@@ -39,6 +39,10 @@ public class Campaign {
 
     private String region;
 
+    private Long parentRegionId;
+
+    private Long childRegionId;
+
     @Column(columnDefinition = "TEXT")
     private String providedContent;
 

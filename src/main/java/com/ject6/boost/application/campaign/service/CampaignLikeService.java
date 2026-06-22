@@ -2,10 +2,9 @@ package com.ject6.boost.application.campaign.service;
 
 import com.ject6.boost.application.common.exception.BusinessException;
 import com.ject6.boost.application.campaign.exception.CampaignErrorCode;
-import com.ject6.boost.domain.campaign.constant.UserCampaignStatus;
-import com.ject6.boost.domain.campaign.entity.UserCampaign;
 import com.ject6.boost.domain.campaign.repository.CampaignRepository;
-import com.ject6.boost.domain.campaign.repository.UserCampaignRepository;
+import com.ject6.boost.domain.campaign.entity.UserCampaignLike;
+import com.ject6.boost.domain.campaign.repository.UserCampaignLikeRepository;
 import com.ject6.boost.presentation.campaign.dto.LikeAnalysisResponse;
 import com.ject6.boost.presentation.campaign.dto.LikeToggleResponse;
 import com.ject6.boost.domain.user.entity.BlogAnalysisResult;
@@ -28,7 +27,7 @@ public class CampaignLikeService {
     private static final int MIN_LIKE_COUNT_FOR_ANALYSIS = 5;
 
     private final CampaignRepository campaignRepository;
-    private final UserCampaignRepository userCampaignRepository;
+    private final UserCampaignLikeRepository userCampaignLikeRepository;
     private final UserRepository userRepository;
     private final BlogAnalysisResultRepository blogAnalysisResultRepository;
 
@@ -37,21 +36,21 @@ public class CampaignLikeService {
         campaignRepository.findById(campaignId)
             .orElseThrow(() -> new BusinessException(CampaignErrorCode.CAMPAIGN_NOT_FOUND));
 
-        Optional<UserCampaign> existing = userCampaignRepository
-            .findByUserIdAndCampaignIdAndStatus(userId, campaignId, UserCampaignStatus.LIKED);
+        Optional<UserCampaignLike> existing = userCampaignLikeRepository
+            .findByUserIdAndCampaignId(userId, campaignId);
 
         boolean liked;
         if (existing.isPresent()) {
-            userCampaignRepository.delete(existing.get());
+            userCampaignLikeRepository.delete(existing.get());
             liked = false;
         } else {
             User user = userRepository.findActiveById(userId)
                 .orElseThrow(() -> new BusinessException(CampaignErrorCode.CAMPAIGN_NOT_FOUND));
-            userCampaignRepository.save(UserCampaign.create(user, campaignId, UserCampaignStatus.LIKED));
+            userCampaignLikeRepository.save(UserCampaignLike.create(user, campaignId));
             liked = true;
         }
 
-        long likeCount = userCampaignRepository.countByCampaignIdAndStatus(campaignId, UserCampaignStatus.LIKED);
+        long likeCount = userCampaignLikeRepository.countByCampaignId(campaignId);
         return new LikeToggleResponse(liked, likeCount);
     }
 
@@ -60,13 +59,13 @@ public class CampaignLikeService {
         campaignRepository.findById(campaignId)
             .orElseThrow(() -> new BusinessException(CampaignErrorCode.CAMPAIGN_NOT_FOUND));
 
-        long likeCount = userCampaignRepository.countByCampaignIdAndStatus(campaignId, UserCampaignStatus.LIKED);
+        long likeCount = userCampaignLikeRepository.countByCampaignId(campaignId);
         if (likeCount < MIN_LIKE_COUNT_FOR_ANALYSIS) {
             return LikeAnalysisResponse.insufficient(campaignId, likeCount);
         }
 
-        List<Long> likerIds = userCampaignRepository
-            .findByCampaignIdAndStatus(campaignId, UserCampaignStatus.LIKED)
+        List<Long> likerIds = userCampaignLikeRepository
+            .findByCampaignId(campaignId)
             .stream()
             .map(uc -> uc.getUser().getId())
             .toList();

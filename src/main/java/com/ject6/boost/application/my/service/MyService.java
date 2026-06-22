@@ -1,10 +1,15 @@
 package com.ject6.boost.application.my.service;
 
 import com.ject6.boost.application.common.exception.BusinessException;
+import com.ject6.boost.domain.campaign.constant.CampaignApplyStatus;
 import com.ject6.boost.domain.campaign.constant.UserCampaignStatus;
 import com.ject6.boost.domain.campaign.entity.Campaign;
 import com.ject6.boost.domain.campaign.entity.UserCampaign;
+import com.ject6.boost.domain.campaign.entity.UserCampaignApply;
+import com.ject6.boost.domain.campaign.entity.UserCampaignLike;
 import com.ject6.boost.domain.campaign.repository.CampaignRepository;
+import com.ject6.boost.domain.campaign.repository.UserCampaignApplyRepository;
+import com.ject6.boost.domain.campaign.repository.UserCampaignLikeRepository;
 import com.ject6.boost.domain.campaign.repository.UserCampaignRepository;
 import com.ject6.boost.application.my.exception.MyErrorCode;
 import com.ject6.boost.domain.my.entity.PointTransaction;
@@ -31,18 +36,20 @@ public class MyService {
     private static final int MIN_WITHDRAW_AMOUNT = 5000;
 
     private final UserCampaignRepository userCampaignRepository;
+    private final UserCampaignApplyRepository userCampaignApplyRepository;
+    private final UserCampaignLikeRepository userCampaignLikeRepository;
     private final CampaignRepository campaignRepository;
     private final BlogAnalysisResultRepository blogAnalysisResultRepository;
     private final PointWalletRepository pointWalletRepository;
     private final PointTransactionRepository pointTransactionRepository;
 
     @Transactional(readOnly = true)
-    public List<MyCampaignListResponse> getMyCampaigns(Long userId, UserCampaignStatus status) {
-        List<UserCampaign> userCampaigns = status == null
-                ? userCampaignRepository.findByUserId(userId)
-                : userCampaignRepository.findByUserIdAndStatus(userId, status);
+    public List<MyCampaignListResponse> getMyCampaigns(Long userId, CampaignApplyStatus status) {
+        List<UserCampaignApply> userCampaigns = status == null
+                ? userCampaignApplyRepository.findByUserId(userId)
+                : userCampaignApplyRepository.findByUserIdAndStatus(userId, status);
 
-        List<Long> campaignIds = userCampaigns.stream().map(UserCampaign::getCampaignId).toList();
+        List<Long> campaignIds = userCampaigns.stream().map(UserCampaignApply::getCampaignId).toList();
         Map<Long, Campaign> campaignMap = campaignRepository.findAllByIdIn(campaignIds)
                 .stream().collect(Collectors.toMap(Campaign::getId, c -> c));
 
@@ -58,7 +65,7 @@ public class MyService {
 
     @Transactional(readOnly = true)
     public MyCampaignListResponse getMyCampaignDetail(Long userId, Long userCampaignId) {
-        UserCampaign uc = userCampaignRepository.findById(userCampaignId)
+        UserCampaignApply uc = userCampaignApplyRepository.findById(userCampaignId)
                 .filter(u -> u.getUser().getId().equals(userId))
                 .orElseThrow(() -> new BusinessException(MyErrorCode.USER_CAMPAIGN_NOT_FOUND));
         Campaign c = campaignRepository.findActiveById(uc.getCampaignId()).orElse(null);
@@ -74,7 +81,7 @@ public class MyService {
 
     @Transactional(readOnly = true)
     public List<CampaignSummaryResponse> getLikes(Long userId) {
-        return toCampaignSummaries(userCampaignRepository.findByUserIdAndStatus(userId, UserCampaignStatus.LIKED));
+        return toCampaignSummariesFromLikes(userCampaignLikeRepository.findByUserId(userId));
     }
 
     private List<CampaignSummaryResponse> toCampaignSummaries(List<UserCampaign> userCampaigns) {
@@ -84,6 +91,16 @@ public class MyService {
         return userCampaigns.stream()
                 .filter(uc -> map.containsKey(uc.getCampaignId()))
                 .map(uc -> CampaignSummaryResponse.from(map.get(uc.getCampaignId())))
+                .toList();
+    }
+
+    private List<CampaignSummaryResponse> toCampaignSummariesFromLikes(List<UserCampaignLike> likes) {
+        List<Long> ids = likes.stream().map(UserCampaignLike::getCampaignId).toList();
+        Map<Long, Campaign> map = campaignRepository.findAllByIdIn(ids)
+                .stream().collect(Collectors.toMap(Campaign::getId, c -> c));
+        return likes.stream()
+                .filter(like -> map.containsKey(like.getCampaignId()))
+                .map(like -> CampaignSummaryResponse.from(map.get(like.getCampaignId())))
                 .toList();
     }
 

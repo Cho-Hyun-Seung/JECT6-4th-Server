@@ -13,6 +13,8 @@ public record CampaignBulkRequest(List<Item> campaigns) {
             String type,
             String channel,
             String region,
+            Long parentRegionId,
+            Long childRegionId,
             String providedContent,
             Integer recruitCount,
             String applyStartDate,

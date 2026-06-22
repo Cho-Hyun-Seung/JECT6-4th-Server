@@ -2,10 +2,9 @@ package com.ject6.boost.application.campaign.service;
 
 import com.ject6.boost.application.campaign.exception.CampaignErrorCode;
 import com.ject6.boost.application.common.exception.BusinessException;
-import com.ject6.boost.domain.campaign.constant.UserCampaignStatus;
 import com.ject6.boost.domain.campaign.entity.Campaign;
 import com.ject6.boost.domain.campaign.repository.CampaignRepository;
-import com.ject6.boost.domain.campaign.repository.UserCampaignRepository;
+import com.ject6.boost.domain.campaign.repository.UserCampaignLikeRepository;
 import com.ject6.boost.infrastructure.common.redis.ViewerCountService;
 import com.ject6.boost.presentation.campaign.dto.CampaignBulkRequest;
 import com.ject6.boost.presentation.campaign.dto.CampaignDetailResponse;
@@ -25,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CampaignService {
 
     private final CampaignRepository campaignRepository;
-    private final UserCampaignRepository userCampaignRepository;
+    private final UserCampaignLikeRepository userCampaignLikeRepository;
     private final ViewerCountService viewerCountService;
 
     public Page<CampaignListResponse> getCampaigns(
@@ -98,15 +97,14 @@ public class CampaignService {
         List<Long> campaignIds = campaigns.stream()
                 .map(Campaign::getId)
                 .toList();
-        return Set.copyOf(userCampaignRepository.findCampaignIdsByUserIdAndCampaignIdInAndStatus(
-                userId, campaignIds, UserCampaignStatus.LIKED));
+        return Set.copyOf(userCampaignLikeRepository.findCampaignIdsByUserIdAndCampaignIdIn(
+                userId, campaignIds));
     }
 
     private boolean isLiked(Long userId, Long campaignId) {
         if (userId == null) {
             return false;
         }
-        return userCampaignRepository.existsByUserIdAndCampaignIdAndStatus(
-                userId, campaignId, UserCampaignStatus.LIKED);
+        return userCampaignLikeRepository.existsByUserIdAndCampaignId(userId, campaignId);
     }
 }

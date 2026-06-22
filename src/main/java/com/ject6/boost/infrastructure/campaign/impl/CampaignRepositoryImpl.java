@@ -61,7 +61,11 @@ public class CampaignRepositoryImpl implements CampaignRepository {
         if (filter.getCategories() != null && !filter.getCategories().isEmpty()) {
             builder.and(c.category.in(filter.getCategories()));
         }
-        if (filter.getRegion() != null) {
+        if (filter.getChildRegionId() != null) {
+            builder.and(c.childRegionId.eq(filter.getChildRegionId()));
+        } else if (filter.getParentRegionId() != null) {
+            builder.and(c.parentRegionId.eq(filter.getParentRegionId()));
+        } else if (filter.getRegion() != null) {
             builder.and(c.region.eq(filter.getRegion()));
         }
         if (filter.getChannel() != null) {
@@ -187,13 +191,17 @@ public class CampaignRepositoryImpl implements CampaignRepository {
                 int rows = jdbcTemplate.update("""
                     INSERT INTO campaigns
                       (source_platform, brand_name, title, thumbnail_url, category, type, channel, region,
+                       parent_region_id, child_region_id,
                        provided_content, recruit_count, apply_start_date, apply_end_date,
                        mission, source_url, is_guaranteed, status, view_count, crawled_at, created_at, updated_at)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'ACTIVE',0,now(),now(),now())
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'ACTIVE',0,now(),now(),now())
                     ON CONFLICT (source_url) DO UPDATE SET
                       title=EXCLUDED.title,
                       category=EXCLUDED.category,
                       type=EXCLUDED.type,
+                      region=EXCLUDED.region,
+                      parent_region_id=EXCLUDED.parent_region_id,
+                      child_region_id=EXCLUDED.child_region_id,
                       provided_content=EXCLUDED.provided_content,
                       recruit_count=EXCLUDED.recruit_count,
                       apply_end_date=EXCLUDED.apply_end_date,
@@ -205,6 +213,8 @@ public class CampaignRepositoryImpl implements CampaignRepository {
                     item.category(), item.type(),
                     item.channel() != null ? item.channel() : "BLOG",
                     item.region(),
+                    item.parentRegionId(),
+                    item.childRegionId(),
                     item.providedContent(), item.recruitCount(),
                     item.applyStartDate() != null ? java.sql.Date.valueOf(item.applyStartDate()) : null,
                     item.applyEndDate() != null ? java.sql.Date.valueOf(item.applyEndDate()) : null,

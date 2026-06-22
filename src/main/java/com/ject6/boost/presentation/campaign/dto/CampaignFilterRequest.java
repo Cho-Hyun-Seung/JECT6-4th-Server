@@ -13,6 +13,8 @@ public class CampaignFilterRequest {
     private List<CampaignCategory> categories;
     private CampaignCategory category;
     private CampaignType type;
+    private Long parentRegionId;
+    private Long childRegionId;
     private String region;
     private String sourcePlatform;
     private String channel;

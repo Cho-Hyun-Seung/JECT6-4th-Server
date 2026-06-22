@@ -19,6 +19,8 @@ public class CampaignDetailResponse {
     private String type;
     private String channel;
     private String region;
+    private Long parentRegionId;
+    private Long childRegionId;
     private String providedContent;
     private Integer recruitCount;
     private Integer applyCount;
@@ -83,6 +85,8 @@ public class CampaignDetailResponse {
                 ? campaign.getType().name() : null)
             .channel(campaign.getChannel())
             .region(campaign.getRegion())
+            .parentRegionId(campaign.getParentRegionId())
+            .childRegionId(campaign.getChildRegionId())
             .providedContent(campaign.getProvidedContent())
             .recruitCount(campaign.getRecruitCount())
             .applyCount(campaign.getApplyCount())

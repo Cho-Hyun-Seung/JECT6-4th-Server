@@ -2,7 +2,7 @@ package com.ject6.boost.presentation.my.controller.docs;
 
 import com.ject6.boost.presentation.common.dto.ApiResponse;
 import com.ject6.boost.presentation.common.security.authentication.AuthenticatedUser;
-import com.ject6.boost.domain.campaign.constant.UserCampaignStatus;
+import com.ject6.boost.domain.campaign.constant.CampaignApplyStatus;
 import com.ject6.boost.presentation.my.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,7 +12,7 @@ import java.util.List;
 public interface MyApi {
 
     @Operation(summary = "내 체험단 목록", description = "status 필터: APPLIED|REVIEWING|SELECTED|COMPLETED (생략 시 전체)")
-    ApiResponse<List<MyCampaignListResponse>> getMyCampaigns(AuthenticatedUser principal, UserCampaignStatus status);
+    ApiResponse<List<MyCampaignListResponse>> getMyCampaigns(AuthenticatedUser principal, CampaignApplyStatus status);
 
     @Operation(summary = "내 체험단 상세")
     ApiResponse<MyCampaignListResponse> getMyCampaignDetail(AuthenticatedUser principal, Long id);

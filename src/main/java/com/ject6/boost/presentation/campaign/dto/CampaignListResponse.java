@@ -18,6 +18,8 @@ public class CampaignListResponse {
     private String type;
     private String channel;
     private String region;
+    private Long parentRegionId;
+    private Long childRegionId;
     private Integer recruitCount;
     private Integer applyCount;
     private LocalDate applyEndDate;
@@ -43,6 +45,8 @@ public class CampaignListResponse {
                 ? campaign.getType().name() : null)
             .channel(campaign.getChannel())
             .region(campaign.getRegion())
+            .parentRegionId(campaign.getParentRegionId())
+            .childRegionId(campaign.getChildRegionId())
             .recruitCount(campaign.getRecruitCount())
             .applyCount(campaign.getApplyCount())
             .applyEndDate(campaign.getApplyEndDate())
