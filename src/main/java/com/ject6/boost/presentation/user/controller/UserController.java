@@ -17,6 +17,7 @@ import com.ject6.boost.presentation.user.dto.UserProfileUpdateRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -36,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Profile("!mock")
 public class UserController implements UserApi {
 
     private static final String BEARER_PREFIX = "Bearer ";

@@ -18,7 +18,7 @@ public enum AuthErrorCode implements ErrorCode {
     OAUTH_PROVIDER_CONFIGURATION_REQUIRED("AUTH-007", "OAuth 제공자 설정이 필요합니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     LOGIN_TOKEN_ISSUE_FAILED("AUTH-008", "로그인 토큰 발급에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     REFRESH_TOKEN_REQUIRED("AUTH-009", "리프레시 토큰이 필요합니다.", HttpStatus.BAD_REQUEST),
-    REFRESH_SESSION_NOT_FOUND("AUTH-010", "리프레시 세션이 존재하지 않습니다.", HttpStatus.UNAUTHORIZED),
+    REFRESH_SESSION_NOT_FOUND("AUTH-010", "리프레시 세션을 찾을 수 없습니다.", HttpStatus.UNAUTHORIZED),
     OAUTH_REDIRECT_URI_REQUIRED("AUTH-011", "OAuth redirect_uri가 필요합니다.", HttpStatus.BAD_REQUEST);
 
     private final String code;

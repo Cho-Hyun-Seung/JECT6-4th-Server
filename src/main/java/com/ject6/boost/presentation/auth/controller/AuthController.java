@@ -13,6 +13,7 @@ import com.ject6.boost.presentation.auth.handler.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -28,6 +29,7 @@ import org.springframework.web.servlet.view.RedirectView;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Profile("!mock")
 public class AuthController implements AuthApi {
 
     private static final String BEARER_PREFIX = "Bearer ";

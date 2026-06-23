@@ -16,6 +16,7 @@ import com.ject6.boost.presentation.campaign.dto.LikeToggleResponse;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/campaigns")
 @RequiredArgsConstructor
+@Profile("!mock")
 public class CampaignController implements CampaignApi {
 
     private final CampaignService campaignService;

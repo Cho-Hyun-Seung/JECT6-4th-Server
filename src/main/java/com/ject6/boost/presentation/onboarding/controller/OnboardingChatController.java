@@ -8,11 +8,13 @@ import com.ject6.boost.presentation.onboarding.dto.OnboardingStepRequest;
 import com.ject6.boost.presentation.onboarding.dto.OnboardingStepResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/onboarding")
 @RequiredArgsConstructor
+@Profile("!mock")
 public class OnboardingChatController implements OnboardingChatApi {
 
     private final OnboardingChatService onboardingChatService;

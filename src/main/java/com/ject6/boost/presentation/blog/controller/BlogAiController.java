@@ -7,6 +7,7 @@ import com.ject6.boost.presentation.blog.controller.docs.BlogAiApi;
 import com.ject6.boost.presentation.blog.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/blog")
 @RequiredArgsConstructor
+@Profile("!mock")
 public class BlogAiController implements BlogAiApi {
 
     private final BlogAiService blogAiService;

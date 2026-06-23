@@ -1,9 +1,9 @@
 package com.ject6.boost.application.my.exception;
 
 import com.ject6.boost.application.common.exception.ErrorCode;
-import lombok.Getter;
-import lombok.AllArgsConstructor;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
