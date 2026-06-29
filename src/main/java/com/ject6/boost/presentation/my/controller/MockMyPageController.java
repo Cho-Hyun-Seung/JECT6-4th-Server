@@ -60,10 +60,10 @@ public class MockMyPageController {
     );
 
     private static final List<Map<String, Object>> AI_HISTORY = List.of(
-            object("historyId", 31L, "diagnosisDate", "20260623"),
-            object("historyId", 28L, "diagnosisDate", "20260620"),
-            object("historyId", 21L, "diagnosisDate", "20260615"),
-            object("historyId", 18L, "diagnosisDate", "20260610")
+            object("historyId", 31L, "diagnosisDate", "20260623", "documentId", 201L),
+            object("historyId", 28L, "diagnosisDate", "20260620", "documentId", 198L),
+            object("historyId", 21L, "diagnosisDate", "20260615", "documentId", 185L),
+            object("historyId", 18L, "diagnosisDate", "20260610", "documentId", 172L)
     );
 
     @GetMapping({"", "/account"})
