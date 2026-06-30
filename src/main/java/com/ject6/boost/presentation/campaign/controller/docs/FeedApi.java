@@ -1,10 +1,13 @@
 package com.ject6.boost.presentation.campaign.controller.docs;
 
+import com.ject6.boost.domain.campaign.constant.CampaignCategory;
+import com.ject6.boost.presentation.campaign.dto.BloggerStoryResponse;
 import com.ject6.boost.presentation.campaign.dto.FeedBodyResponse;
 import com.ject6.boost.presentation.campaign.dto.HeroResponse;
 import com.ject6.boost.presentation.common.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "피드", description = "홈 피드 API")
@@ -16,6 +19,6 @@ public interface FeedApi {
     @Operation(summary = "메인 바디", description = "인기, 마감 임박, 100% 당첨 섹션 데이터를 조회합니다.")
     ResponseEntity<ApiResponse<FeedBodyResponse>> getBody();
 
-    @Operation(summary = "블로거 성공 사례", description = "유명 블로거 성공 사례를 조회합니다.")
-    ResponseEntity<ApiResponse<Object>> getBloggerStories();
+    @Operation(summary = "블로거 포스팅", description = "피드에 표시할 블로거 포스팅 카드를 조회합니다.")
+    ResponseEntity<ApiResponse<List<BloggerStoryResponse>>> getBloggerStories(CampaignCategory category);
 }
