@@ -1,6 +1,12 @@
 package com.ject6.boost.infrastructure.blog.listener;
 
 import com.ject6.boost.application.blog.service.DiagnosisQuotaService;
+import com.ject6.boost.domain.user.entity.BlogAnalysisResult;
+import com.ject6.boost.domain.user.entity.User;
+import com.ject6.boost.domain.user.entity.UserBlog;
+import com.ject6.boost.domain.user.repository.BlogAnalysisResultRepository;
+import com.ject6.boost.domain.user.repository.UserBlogRepository;
+import com.ject6.boost.domain.user.repository.UserRepository;
 import com.ject6.boost.infrastructure.common.config.RabbitMQConfig;
 import com.ject6.boost.infrastructure.common.queue.AnalysisCompletedMessage;
 import com.ject6.boost.infrastructure.common.redis.AnalysisCacheService;
@@ -15,6 +21,7 @@ import org.springframework.stereotype.Component;
  *   2. SUCCESS일 때만 Redis 분석 캐시 포인터 저장 (A-2)
  *   3. 의미 기반 lock 해제 — correlationId → {userId, blogId} 컨텍스트로 역산 (A-1, A-3)
  *   4. R3 진단 쿼터 확정 차감 (correlationId 멱등 보장, B-2)
+ *   5. FULL_BLOG 성공 시 blog_analysis_results에 히스토리 항목 저장 (POST 모드는 요청 시점에 이미 저장됨)
  */
 @Slf4j
 @Component
@@ -23,6 +30,9 @@ public class AnalysisCompletedListener {
 
     private final AnalysisCacheService cacheService;
     private final DiagnosisQuotaService quotaService;
+    private final BlogAnalysisResultRepository blogAnalysisResultRepository;
+    private final UserRepository userRepository;
+    private final UserBlogRepository userBlogRepository;
 
     @RabbitListener(queues = RabbitMQConfig.COMPLETED_QUEUE)
     public void handle(AnalysisCompletedMessage message) {
@@ -49,6 +59,7 @@ public class AnalysisCompletedListener {
                     Long blogId = resolveBlogId(correlationId, message.blogId());
                     if (blogId != null && message.userId() != null && message.analysisJobId() != null) {
                         cacheService.putFullBlogCache(message.userId(), blogId, message.analysisJobId());
+                        saveHistoryEntry(message.userId(), blogId, message.documentId());
                     } else {
                         log.warn("FULL_BLOG cache skipped: missing blogId or jobId correlationId={}", correlationId);
                     }
@@ -80,6 +91,28 @@ public class AnalysisCompletedListener {
             } else {
                 quotaService.releaseReservation(message.userId());
             }
+        }
+    }
+
+    /**
+     * FULL_BLOG 분석 완료 시 히스토리 목록(blog_analysis_results)에 항목을 남긴다.
+     * POST 모드는 요청 시점에 BlogAiService에서 이미 저장하지만, FULL_BLOG는 완료 시점에야
+     * documentId가 확정되므로 여기서 저장해야 한다 (이전에는 이 저장 자체가 누락되어 있었음).
+     */
+    private void saveHistoryEntry(Long userId, Long blogId, Long documentId) {
+        if (documentId == null) {
+            log.warn("FULL_BLOG history skipped: documentId 없음 userId={} blogId={}", userId, blogId);
+            return;
+        }
+        try {
+            User user = userRepository.findActiveById(userId).orElseThrow();
+            UserBlog blog = userBlogRepository.findActiveByUser(user).stream()
+                    .filter(b -> b.getId().equals(blogId))
+                    .findFirst()
+                    .orElseThrow();
+            blogAnalysisResultRepository.save(BlogAnalysisResult.create(user, blog, documentId));
+        } catch (Exception e) {
+            log.warn("blog_analysis_results 저장 실패 (FULL_BLOG) userId={} blogId={}: {}", userId, blogId, e.getMessage());
         }
     }
 
